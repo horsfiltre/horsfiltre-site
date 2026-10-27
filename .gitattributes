@@ -1,0 +1,7 @@
+# Fins de ligne normalisées en LF, quel que soit le poste (Windows inclus)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.webp binary
+*.woff2 binary
+*.ico binary

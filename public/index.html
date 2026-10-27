@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Décroché — Accompagnement à la recherche d'alternance, CDI et stage</title>
+<meta name="description" content="Nous accompagnons les étudiants et jeunes diplômés à décrocher leur alternance, CDI ou stage. Refonte de CV optimisé ATS, stratégie de candidature, préparation aux entretiens, suivi jusqu'à la signature.">
+<meta property="og:title" content="Décroché — Le système de candidature est conçu contre vous. On vous apprend à le contourner.">
+<meta property="og:description" content="104 personnes accompagnées jusqu'à la signature. Refonte de CV, stratégie, entretiens, suivi.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   DÉCROCHÉ — Design tokens
+   Concept : encre & signature. Le geste de signer un contrat.
+   ============================================================ */
+:root{
+  --paper:#FBFAF7;        /* papier chaud, pas crème-beige */
+  --paper-2:#F2F0EA;      /* papier ombré */
+  --ink:#16182C;          /* encre profonde, bleu-nuit */
+  --ink-soft:#4A4E66;
+  --ink-faint:#8C90A6;
+  --blue:#2440F0;         /* bleu stylo, accent unique */
+  --blue-wash:#E4E8FF;
+  --rule:#DEDBD2;
+  --ok:#0F8A5F;
+
+  --f-display:'Bricolage Grotesque',system-ui,sans-serif;
+  --f-text:'Instrument Sans',system-ui,sans-serif;
+
+  --maxw:1180px;
+  --pad:clamp(20px,5vw,40px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--f-text);font-size:17px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:2px}
+
+.wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
+section{padding-block:clamp(64px,10vw,128px)}
+
+h1,h2,h3{font-family:var(--f-display);line-height:1.02;letter-spacing:-.03em;font-weight:700}
+h1{font-size:clamp(44px,9.5vw,104px);font-weight:800}
+h2{font-size:clamp(32px,5.6vw,62px)}
+h3{font-size:clamp(20px,2.6vw,27px);letter-spacing:-.02em;line-height:1.15}
+p{max-width:66ch}
+
+/* ---------- NAV ---------- */
+nav{
+  position:fixed;inset:0 0 auto 0;z-index:100;
+  background:rgba(251,250,247,.82);backdrop-filter:blur(14px);
+  border-bottom:1px solid transparent;transition:border-color .3s;
+}
+nav.stuck{border-bottom-color:var(--rule)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:66px;
+  max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
+.logo{font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.045em;text-decoration:none}
+.logo span{color:var(--blue)}
+.nav-links{display:none;gap:30px;font-size:15px}
+.nav-links a{text-decoration:none;color:var(--ink-soft);transition:color .2s}
+.nav-links a:hover{color:var(--ink)}
+@media(min-width:900px){.nav-links{display:flex}}
+
+.btn{
+  display:inline-block;background:var(--ink);color:var(--paper);
+  padding:14px 26px;border-radius:100px;text-decoration:none;
+  font-family:var(--f-text);font-weight:600;font-size:16px;
+  border:none;cursor:pointer;transition:background .2s,transform .2s;
+}
+.btn:hover{background:var(--blue)}
+.btn:active{transform:scale(.98)}
+.btn-sm{padding:10px 20px;font-size:15px}
+.btn-line{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
+.btn-line:hover{background:var(--ink);color:var(--paper)}
+
+/* ---------- HERO ---------- */
+.hero{padding-top:clamp(100px,16vw,168px);padding-bottom:clamp(56px,8vw,96px)}
+.hero h1{max-width:14ch}
+.hero h1 .l{display:block;opacity:0;transform:translateY(.35em);
+  animation:rise .9s cubic-bezier(.2,.7,.3,1) forwards}
+.hero h1 .l:nth-child(2){animation-delay:.09s}
+.hero h1 .l:nth-child(3){animation-delay:.18s}
+@keyframes rise{to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.hero h1 .l{animation:none;opacity:1;transform:none}}
+
+.hero-sub{margin-top:44px;font-size:clamp(17px,2.1vw,21px);color:var(--ink-soft);max-width:52ch}
+.hero-cta{margin-top:36px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.hero-note{margin-top:18px;font-size:14.5px;color:var(--ink-faint)}
+
+/* signature underline sur le mot clé */
+.sig{position:relative;white-space:nowrap}
+.sig svg{position:absolute;left:0;right:0;bottom:-.16em;width:100%;height:.3em;overflow:visible}
+.sig path{fill:none;stroke:var(--blue);stroke-width:7;stroke-linecap:round;
+  stroke-dasharray:420;stroke-dashoffset:420;animation:draw 1.1s .75s ease-out forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@media(prefers-reduced-motion:reduce){.sig path{animation:none;stroke-dashoffset:0}}
+
+/* ---------- BANDEAU CHIFFRES ---------- */
+.band{border-block:1px solid var(--rule);background:var(--paper-2)}
+.band .wrap{display:grid;gap:28px;padding-block:44px;
+  grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
+.stat b{font-family:var(--f-display);font-size:clamp(38px,5.4vw,56px);font-weight:800;
+  letter-spacing:-.04em;display:block;line-height:1}
+.stat span{font-size:15px;color:var(--ink-soft);display:block;margin-top:8px;max-width:24ch}
+
+/* ---------- PROBLEME ---------- */
+.pains{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+  border-radius:18px;overflow:hidden;margin-top:48px}
+@media(min-width:760px){.pains{grid-template-columns:1fr 1fr}}
+.pain{background:var(--paper);padding:clamp(26px,3.4vw,38px)}
+.pain h3{margin-bottom:10px}
+.pain p{color:var(--ink-soft);font-size:16px}
+
+/* ---------- ATS (le moment fort) ---------- */
+.ats{background:var(--ink);color:var(--paper)}
+.ats h2{color:var(--paper)}
+.ats p{color:#B9BDD4}
+.ats-grid{display:grid;gap:44px;margin-top:52px}
+@media(min-width:940px){.ats-grid{grid-template-columns:1fr 1fr;gap:60px;align-items:center}}
+
+.scanner{position:relative;background:#1E2140;border:1px solid #2E3260;
+  border-radius:16px;padding:22px;overflow:hidden}
+.scan-head{display:flex;justify-content:space-between;align-items:center;
+  font-size:13px;color:#8C90B8;margin-bottom:18px;font-weight:500}
+.doc{display:grid;gap:9px}
+.line{height:9px;border-radius:3px;background:#343863;transition:background .45s}
+.line.w1{width:62%}.line.w2{width:88%}.line.w3{width:74%}.line.w4{width:94%}
+.line.w5{width:52%}.line.w6{width:81%}.line.w7{width:68%}
+.doc.pass .line{background:#1F6B52}
+.doc.fail .line{background:#5E2740}
+.beam{position:absolute;left:0;right:0;height:56px;pointer-events:none;
+  background:linear-gradient(180deg,transparent,rgba(36,64,240,.45),transparent);
+  top:-60px}
+.scanning .beam{animation:sweep 1.7s cubic-bezier(.4,0,.5,1)}
+@keyframes sweep{0%{top:-60px}100%{top:100%}}
+.verdict{margin-top:20px;font-family:var(--f-display);font-weight:700;font-size:19px;
+  min-height:1.5em;letter-spacing:-.02em}
+.verdict.fail{color:#FF8098}
+.verdict.pass{color:#4FD6A5}
+.scan-toggle{display:flex;gap:8px;margin-top:20px}
+.scan-toggle button{flex:1;background:#282C52;color:#C9CCE6;border:1px solid #3A3F72;
+  padding:11px;border-radius:9px;font-family:var(--f-text);font-size:14.5px;
+  font-weight:600;cursor:pointer;transition:.2s}
+.scan-toggle button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
+
+.ats-points{display:grid;gap:24px;margin-top:34px}
+.ats-points li{list-style:none;padding-left:22px;position:relative;color:#B9BDD4;font-size:16.5px}
+.ats-points li::before{content:"";position:absolute;left:0;top:.62em;
+  width:9px;height:9px;border-radius:50%;background:var(--blue)}
+.ats-points b{color:var(--paper);font-weight:600}
+
+/* ---------- METHODE ---------- */
+.steps{counter-reset:s;margin-top:52px;border-top:1px solid var(--rule)}
+.step{counter-increment:s;border-bottom:1px solid var(--rule);
+  padding-block:clamp(26px,3.6vw,40px);display:grid;gap:14px}
+@media(min-width:820px){.step{grid-template-columns:78px 1fr 1.15fr;gap:32px;align-items:start}}
+.step::before{content:counter(s,decimal-leading-zero);font-family:var(--f-display);
+  font-weight:800;font-size:27px;color:var(--blue);letter-spacing:-.03em}
+.step p{color:var(--ink-soft);font-size:16.5px}
+.step-dur{font-size:14px;color:var(--ink-faint);margin-top:8px}
+
+/* ---------- TEMOIGNAGES ---------- */
+.quotes{display:grid;gap:20px;margin-top:48px}
+@media(min-width:780px){.quotes{grid-template-columns:repeat(3,1fr)}}
+.quote{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;
+  padding:28px;display:flex;flex-direction:column;gap:16px}
+.quote p{font-size:16.5px;flex:1}
+.quote footer{font-size:14.5px;color:var(--ink-faint);border-top:1px solid var(--rule);padding-top:14px}
+.quote footer b{display:block;color:var(--ink);font-size:15.5px;font-weight:600;margin-bottom:2px}
+
+/* ---------- EQUIPE ---------- */
+.team{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
+  border-radius:18px;overflow:hidden;margin-top:48px}
+@media(min-width:720px){.team{grid-template-columns:1fr 1fr}}
+@media(min-width:1040px){.team{grid-template-columns:repeat(4,1fr)}}
+.member{background:var(--paper);padding:30px 26px}
+.member .role{font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:-.02em}
+.member .from{font-size:15px;color:var(--blue);margin-top:5px;font-weight:500}
+.member .bio{font-size:15px;color:var(--ink-soft);margin-top:12px}
+
+/* ---------- TARIFS ---------- */
+.price{background:var(--blue-wash);border-radius:20px;padding:clamp(30px,4.4vw,52px);margin-top:44px}
+.price-rows{display:grid;gap:26px;margin-top:28px}
+@media(min-width:800px){.price-rows{grid-template-columns:1fr 1fr;gap:44px}}
+.price-row h3{margin-bottom:10px}
+.price-row p{font-size:16.5px;color:var(--ink-soft)}
+.price-note{margin-top:30px;padding-top:24px;border-top:1px solid #C5CDFA;
+  font-size:16px;color:var(--ink-soft)}
+
+/* ---------- FAQ ---------- */
+.faq{margin-top:44px;border-top:1px solid var(--rule)}
+details{border-bottom:1px solid var(--rule)}
+summary{padding:22px 42px 22px 0;cursor:pointer;list-style:none;position:relative;
+  font-family:var(--f-display);font-weight:700;font-size:clamp(17px,2.1vw,21px);
+  letter-spacing:-.02em;line-height:1.3}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"";position:absolute;right:8px;top:50%;width:13px;height:13px;
+  border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);
+  transform:translateY(-70%) rotate(45deg);transition:transform .25s}
+details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
+details p{padding-bottom:24px;color:var(--ink-soft);font-size:16.5px}
+
+/* ---------- CTA FINAL ---------- */
+.final{background:var(--ink);color:var(--paper);text-align:left}
+.final h2{color:var(--paper);max-width:16ch}
+.final p{color:#B9BDD4;margin-top:20px;font-size:18px}
+.final .btn{background:var(--paper);color:var(--ink);margin-top:34px}
+.final .btn:hover{background:var(--blue);color:#fff}
+.contact{display:flex;flex-wrap:wrap;gap:12px 34px;margin-top:34px;
+  font-size:16px;color:#B9BDD4}
+.contact a{color:var(--paper);text-decoration:none;border-bottom:1px solid #4A4E80;padding-bottom:2px}
+.contact a:hover{border-color:var(--blue)}
+
+/* ---------- FOOTER ---------- */
+footer.site{border-top:1px solid var(--rule);padding-block:38px;font-size:14.5px;color:var(--ink-faint)}
+footer.site .wrap{display:flex;flex-wrap:wrap;gap:14px 30px;justify-content:space-between}
+footer.site a{color:var(--ink-soft);text-decoration:none}
+footer.site a:hover{color:var(--blue)}
+
+.lead{font-size:clamp(17px,2.2vw,21px);color:var(--ink-soft);margin-top:20px;max-width:56ch}
+</style>
+</head>
+<body>
+
+<nav id="nav">
+  <div class="nav-in">
+    <a href="#top" class="logo">Décroché<span>.</span></a>
+    <div class="nav-links">
+      <a href="#probleme">Le problème</a>
+      <a href="#filtre">Le filtre</a>
+      <a href="#methode">La méthode</a>
+      <a href="#equipe">L'équipe</a>
+      <a href="#faq">Questions</a>
+    </div>
+    <a href="#rdv" class="btn btn-sm">Premier échange</a>
+  </div>
+</nav>
+
+<!-- ============ HERO ============ -->
+<header class="hero wrap" id="top">
+  <h1>
+    <span class="l">Le système de</span>
+    <span class="l">candidature est</span>
+    <span class="l"><span class="sig">truqué<svg viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true"><path d="M6 21 C 70 8, 150 26, 220 14 S 340 6, 394 17"/></svg></span>.</span>
+  </h1>
+
+  <p class="hero-sub">Quatre heures pour préparer un dossier. Huit secondes de lecture, quand un humain le lit. Nous sommes passés par là, et nous avons appris à contourner le tri. Aujourd'hui nous le faisons avec vous.</p>
+
+  <div class="hero-cta">
+    <a href="#rdv" class="btn">Réserver un premier échange</a>
+    <a href="#methode" class="btn btn-line">Voir la méthode</a>
+  </div>
+  <p class="hero-note">Alternance, CDI, CDD, stage et freelance. Tous domaines, tous niveaux.</p>
+</header>
+
+<!-- ============ CHIFFRES ============ -->
+<div class="band">
+  <div class="wrap">
+    <div class="stat"><b data-count="112">0</b><span>candidats accompagnés depuis le lancement</span></div>
+    <div class="stat"><b data-count="104">0</b><span>ont signé leur contrat</span></div>
+    <div class="stat"><b data-count="4" data-suffix=" sem.">0</b><span>de durée moyenne d'accompagnement</span></div>
+    <div class="stat"><b data-count="10" data-suffix=" max">0</b><span>candidats suivis en parallèle par accompagnant</span></div>
+  </div>
+</div>
+
+<!-- ============ PROBLEME ============ -->
+<section id="probleme" class="wrap">
+  <h2>Vous ne cherchez pas mal.<br>Vous cherchez à l'aveugle.</h2>
+  <p class="lead">Personne ne vous a jamais expliqué comment votre candidature est réellement traitée une fois envoyée. Résultat : vous travaillez dur sur les mauvaises choses.</p>
+
+  <div class="pains">
+    <article class="pain">
+      <h3>Le dimanche soir qui dérape</h3>
+      <p>Vous commencez à 18h pour envoyer cinq candidatures. À minuit vous en avez fait trois, vous êtes vidé, et lundi est déjà gâché.</p>
+    </article>
+    <article class="pain">
+      <h3>Le copier-coller que vous détestez</h3>
+      <p>Vous savez qu'il faudrait personnaliser. Mais à la quinzième lettre, vous changez juste le nom de l'entreprise — par épuisement, pas par paresse.</p>
+    </article>
+    <article class="pain">
+      <h3>Le silence radio</h3>
+      <p>Cinquante candidatures, deux réponses automatiques. Vous ne savez même pas si un humain a ouvert votre CV. Souvent, la réponse est non.</p>
+    </article>
+    <article class="pain">
+      <h3>L'entretien qui vous surprend</h3>
+      <p>Le recruteur appelle dans trente minutes. Vous ne retrouvez plus quelle version du CV vous lui avez envoyée, ni ce que fait l'entreprise.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ ATS : LE MOMENT FORT ============ -->
+<section id="filtre" class="ats">
+  <div class="wrap">
+    <h2>Votre CV est d'abord lu<br>par une machine.</h2>
+    <p class="lead">Dans la plupart des grandes entreprises, un logiciel de tri analyse votre CV avant qu'un recruteur ne le voie. S'il ne comprend pas votre document, personne ne le lira jamais. Ce n'est pas une question de niveau : c'est une question de format.</p>
+
+    <div class="ats-grid">
+      <div>
+        <div class="scanner" id="scanner">
+          <div class="scan-head">
+            <span>Analyse automatique du document</span>
+            <span id="scan-state">en attente</span>
+          </div>
+          <div class="doc" id="doc">
+            <div class="line w1"></div><div class="line w2"></div><div class="line w3"></div>
+            <div class="line w4"></div><div class="line w5"></div><div class="line w6"></div>
+            <div class="line w7"></div>
+          </div>
+          <div class="beam" id="beam"></div>
+          <p class="verdict" id="verdict"></p>
+          <div class="scan-toggle">
+            <button type="button" id="btn-fail" aria-pressed="false">CV classique</button>
+            <button type="button" id="btn-pass" aria-pressed="false">CV retravaillé</button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <ul class="ats-points">
+          <li><b>Les colonnes, tableaux et encadrés</b> sont fréquemment mal interprétés par les logiciels de tri. Une mise en page élégante à l'œil peut être illisible pour la machine.</li>
+          <li><b>Les mots-clés de l'offre</b> doivent apparaître dans vos formulations. Si l'annonce dit « supervision industrielle » et que votre CV dit « surveillance des machines », le rapprochement n'est pas garanti.</li>
+          <li><b>Les grands groupes utilisent de plus en plus l'IA</b> pour résumer et classer les candidatures. Un CV flou produit un résumé flou — et un mauvais classement.</li>
+          <li><b>Le fond ne suffit pas.</b> Un excellent profil mal structuré est écarté avant d'avoir été jugé sur ses compétences.</li>
+        </ul>
+        <p style="margin-top:30px;color:#8C90B8;font-size:15px">Illustration pédagogique. Le comportement exact varie selon les logiciels et les entreprises.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ METHODE ============ -->
+<section id="methode" class="wrap">
+  <h2>Quatre étapes.<br>Trois à quatre semaines.</h2>
+  <p class="lead">Rien de magique : un travail précis, fait dans le bon ordre, avec quelqu'un qui a déjà vu ce qui fonctionne et ce qui ne fonctionne pas.</p>
+
+  <div class="steps">
+    <article class="step">
+      <h3>Reconstruction du CV</h3>
+      <div>
+        <p>Nous reprenons votre CV à zéro : structure lisible par les logiciels de tri, reformulation complète de vos missions, mise en avant de ce qui compte réellement pour votre cible. Ce n'est pas une relecture, c'est une réécriture.</p>
+        <p class="step-dur">Environ 5 jours, avec un aller-retour de validation.</p>
+      </div>
+    </article>
+
+    <article class="step">
+      <h3>Stratégie de candidature</h3>
+      <div>
+        <p>Nous construisons ensemble une liste courte d'entreprises réellement pertinentes pour votre profil, plutôt que deux cents candidatures envoyées au hasard. Nous identifions les bons interlocuteurs et le bon moment pour les contacter.</p>
+        <p class="step-dur">Environ 3 jours.</p>
+      </div>
+    </article>
+
+    <article class="step">
+      <h3>Préparation aux entretiens</h3>
+      <div>
+        <p>Simulations en visio, questions techniques propres à votre domaine, préparation des sujets qui déstabilisent : vos trous de parcours, vos motivations, la question du salaire. Vous arrivez en ayant déjà répondu une fois.</p>
+        <p class="step-dur">En continu, avant chaque entretien réel.</p>
+      </div>
+    </article>
+
+    <article class="step">
+      <h3>Suivi jusqu'à la signature</h3>
+      <div>
+        <p>Nous restons disponibles pendant toute la recherche : débrief après chaque entretien, ajustement de la stratégie, relances, et appui au moment de la négociation. Vous n'avancez plus seul.</p>
+        <p class="step-dur">Jusqu'à la signature du contrat.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ ORIENTATION ============ -->
+<section class="wrap" style="border-top:1px solid var(--rule)">
+  <h2>Et si le problème<br>n'était pas la recherche ?</h2>
+  <p class="lead">Certains candidats que nous accompagnons ne cherchent pas au mauvais endroit : ils cherchent dans le mauvais métier. Quand c'est le cas, nous le disons.</p>
+  <p class="lead">Nous proposons aussi un accompagnement à l'orientation : comprendre concrètement ce que recouvrent les métiers d'un secteur, identifier ceux qui correspondent à votre façon de fonctionner, et choisir une formation cohérente — y compris quand cela signifie changer de voie.</p>
+</section>
+
+<!-- ============ TEMOIGNAGES ============ -->
+<section class="wrap" style="background:var(--paper-2);max-width:none">
+  <div style="max-width:var(--maxw);margin:0 auto">
+    <h2>Ce qu'ils en disent.</h2>
+    <p class="lead">Nous pouvons vous mettre en relation directe avec d'anciens accompagnés avant que vous vous engagiez. Demandez-le, c'est normal.</p>
+
+    <div class="quotes">
+      <figure class="quote">
+        <p>« J'avais envoyé plus de cent candidatures sans aucune réponse. Le CV a été entièrement refait, et j'ai eu trois entretiens dans les deux semaines qui ont suivi. »</p>
+        <footer><b>Emplacement témoignage 1</b>École / domaine — contrat signé</footer>
+      </figure>
+      <figure class="quote">
+        <p>« Ce qui m'a le plus servi, c'est la préparation aux entretiens. J'ai arrêté d'improviser sur les questions que je redoutais. »</p>
+        <footer><b>Emplacement témoignage 2</b>École / domaine — contrat signé</footer>
+      </figure>
+      <figure class="quote">
+        <p>« Je pensais que mon profil était le problème. En fait c'était la façon dont je le présentais. »</p>
+        <footer><b>Emplacement témoignage 3</b>École / domaine — contrat signé</footer>
+      </figure>
+    </div>
+    <p style="margin-top:28px;font-size:15px;color:var(--ink-faint)">Témoignages à remplacer par vos retours réels, avec l'accord écrit de chaque personne.</p>
+  </div>
+</section>
+
+<!-- ============ EQUIPE ============ -->
+<section id="equipe" class="wrap">
+  <h2>Nous avons tous<br>galéré avant vous.</h2>
+  <p class="lead">Décroché n'a pas été créé par des consultants en carrière. Nous sommes quatre professionnels qui ont chacun raté, attendu, recommencé — et qui ont fini par comprendre comment le tri fonctionne réellement. Certains d'entre nous font aujourd'hui passer les entretiens de l'autre côté de la table.</p>
+
+  <div class="team">
+    <article class="member">
+      <div class="role">Fondateur</div>
+      <div class="from">Centrale Lyon</div>
+      <p class="bio">Deux ans d'expérience, aujourd'hui en freelance. Construit la méthode de reconstruction de CV et pilote l'accompagnement.</p>
+    </article>
+    <article class="member">
+      <div class="role">Ingénieur cybersécurité</div>
+      <div class="from">IMT Atlantique</div>
+      <p class="bio">Trois ans d'expérience. Prépare les entretiens techniques et les profils IT, réseaux et sécurité.</p>
+    </article>
+    <article class="member">
+      <div class="role">Chef de projet IT</div>
+      <div class="from">SKEMA</div>
+      <p class="bio">Cinq ans d'expérience. Intervient sur les profils gestion de projet, conseil et fonctions transverses.</p>
+    </article>
+    <article class="member">
+      <div class="role">Talent acquisition</div>
+      <div class="from">Sorbonne</div>
+      <p class="bio">En poste côté recrutement. Apporte la lecture réelle d'un recruteur sur les dossiers et les entretiens RH.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ TARIFS ============ -->
+<section class="wrap">
+  <h2>Ce que ça coûte.</h2>
+  <div class="price">
+    <p style="font-size:18px">Nous n'encaissons rien sur ce site et rien avant de vous avoir parlé. Le montant se fixe lors du premier échange, en fonction de votre situation.</p>
+    <div class="price-rows">
+      <div class="price-row">
+        <h3>Le premier échange est gratuit</h3>
+        <p>Trente minutes pour comprendre où vous en êtes, regarder votre CV et vous dire honnêtement si nous pouvons vous aider. Si ce n'est pas le cas, nous vous le disons — et vous repartez quand même avec un retour utile.</p>
+      </div>
+      <div class="price-row">
+        <h3>Un montant adapté, échelonnable</h3>
+        <p>L'accompagnement complet représente une somme modeste au regard d'un contrat décroché — l'équivalent de quelques jours de salaire d'alternant. Le paiement peut être réparti en plusieurs fois, et rien n'est dû avant que nous ayons commencé à travailler.</p>
+      </div>
+    </div>
+    <p class="price-note">Pas d'abonnement, pas de reconduction automatique, pas de frais cachés. Les conditions exactes sont écrites et validées ensemble avant le démarrage.</p>
+  </div>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section id="faq" class="wrap">
+  <h2>Les questions<br>qu'on nous pose.</h2>
+  <div class="faq">
+    <details>
+      <summary>Comment savoir que ce n'est pas une arnaque ?</summary>
+      <p>C'est la question la plus légitime, et nous préférons que vous la posiez. Nous sommes identifiables et déclarés, le premier échange est gratuit et sans engagement, les conditions sont écrites avant tout démarrage, et nous pouvons vous mettre en relation avec d'anciens accompagnés pour que vous ayez un retour direct, sans filtre.</p>
+    </details>
+    <details>
+      <summary>Et si je ne trouve pas de contrat ?</summary>
+      <p>Nous ne promettons pas un résultat, parce que personne ne peut le garantir honnêtement : le marché, votre profil et votre implication comptent autant que notre travail. Ce que nous garantissons, c'est la qualité et la régularité de l'accompagnement. Les conditions en cas d'absence de résultat sont discutées et écrites lors du premier échange.</p>
+    </details>
+    <details>
+      <summary>Vous accompagnez quels profils ?</summary>
+      <p>Tous les niveaux, du bac+2 au bac+5 et au-delà, et tous les domaines. Pour l'alternance, le stage, le CDD, le CDI et le démarrage en freelance. Si votre secteur sort de nos compétences, nous vous le disons dès le premier échange plutôt que de vous accompagner à moitié.</p>
+    </details>
+    <details>
+      <summary>Combien de temps dure l'accompagnement ?</summary>
+      <p>Trois à quatre semaines pour la partie structurante — reconstruction du CV, stratégie, préparation. Le suivi continue ensuite jusqu'à la signature de votre contrat, sans limite de durée fixée à l'avance.</p>
+    </details>
+    <details>
+      <summary>Vous écrivez le CV à ma place ?</summary>
+      <p>Nous reformulons et restructurons ce que vous avez réellement fait, pour que ce soit lisible par les logiciels de tri et compréhensible par un recruteur en quelques secondes. Nous n'inventons jamais une expérience, un diplôme ou une compétence : c'est votre parcours, mieux exprimé. C'est aussi ce qui vous permet de tenir en entretien.</p>
+    </details>
+    <details>
+      <summary>Vous postulez à ma place ?</summary>
+      <p>Non. Vous gardez la main sur chaque envoi. Nous préparons, vous décidez.</p>
+    </details>
+    <details>
+      <summary>Pourquoi seulement dix candidats par accompagnant ?</summary>
+      <p>Parce qu'au-delà, le suivi devient superficiel. Chacun d'entre nous suit dix personnes au maximum en parallèle, ce qui explique que les places ne soient pas toujours disponibles immédiatement.</p>
+    </details>
+    <details>
+      <summary>Que deviennent mes données ?</summary>
+      <p>Votre CV et vos informations servent uniquement à l'accompagnement. Ils ne sont ni vendus, ni transmis à des recruteurs, ni utilisés à d'autres fins. Vous pouvez demander leur suppression à tout moment.</p>
+    </details>
+  </div>
+</section>
+
+<!-- ============ CTA FINAL ============ -->
+<section class="final" id="rdv">
+  <div class="wrap">
+    <h2>Trente minutes pour savoir où vous en êtes.</h2>
+    <p>Envoyez-nous votre CV et vos disponibilités. Nous regardons votre dossier avant l'appel, et nous vous disons franchement si nous pouvons vous être utiles.</p>
+    <a href="#" class="btn" id="cta-final">Réserver un premier échange</a>
+    <div class="contact">
+      <span>Écrivez-nous : <a href="mailto:VOTRE-EMAIL">VOTRE-EMAIL</a></span>
+      <span>Téléphone : <a href="tel:VOTRE-NUMERO">VOTRE&nbsp;NUMÉRO</a></span>
+      <span>LinkedIn : <a href="VOTRE-LIEN-LINKEDIN">le profil de l'équipe</a></span>
+    </div>
+  </div>
+</section>
+
+<footer class="site">
+  <div class="wrap">
+    <span>Décroché — accompagnement à la recherche d'emploi et d'alternance</span>
+    <span>
+      <a href="/mentions-legales.html">Mentions légales</a> ·
+      <a href="/cgv.html">Conditions générales</a> ·
+      <a href="/confidentialite.html">Confidentialité</a>
+    </span>
+  </div>
+</footer>
+
+<script>
+/* nav border on scroll */
+const nav=document.getElementById('nav');
+addEventListener('scroll',()=>nav.classList.toggle('stuck',scrollY>10),{passive:true});
+
+/* compteurs animés — une seule fois, à l'entrée du bandeau */
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const counters=document.querySelectorAll('[data-count]');
+const setVal=(el,v)=>el.textContent=v+(el.dataset.suffix||'');
+if(reduce){counters.forEach(el=>setVal(el,el.dataset.count));}
+else{
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(!e.isIntersecting)return;
+      const el=e.target,target=+el.dataset.count,dur=1100,t0=performance.now();
+      const tick=t=>{
+        const p=Math.min((t-t0)/dur,1);
+        setVal(el,Math.round(target*(1-Math.pow(1-p,3))));
+        if(p<1)requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      io.unobserve(el);
+    });
+  },{threshold:.5});
+  counters.forEach(el=>io.observe(el));
+}
+
+/* démo du filtre ATS */
+const scanner=document.getElementById('scanner'),
+      doc=document.getElementById('doc'),
+      verdict=document.getElementById('verdict'),
+      state=document.getElementById('scan-state'),
+      bFail=document.getElementById('btn-fail'),
+      bPass=document.getElementById('btn-pass');
+let busy=false;
+
+function run(mode){
+  if(busy)return; busy=true;
+  bFail.setAttribute('aria-pressed',mode==='fail');
+  bPass.setAttribute('aria-pressed',mode==='pass');
+  doc.className='doc'; verdict.className='verdict'; verdict.textContent='';
+  state.textContent='analyse en cours';
+  if(reduce){finish(mode);return;}
+  scanner.classList.remove('scanning'); void scanner.offsetWidth;
+  scanner.classList.add('scanning');
+  setTimeout(()=>finish(mode),1700);
+}
+function finish(mode){
+  scanner.classList.remove('scanning');
+  doc.classList.add(mode);
+  verdict.classList.add(mode);
+  if(mode==='fail'){
+    verdict.textContent='Document mal interprété — candidature écartée avant lecture humaine.';
+    state.textContent='rejeté';
+  }else{
+    verdict.textContent='Document correctement lu — la candidature part chez le recruteur.';
+    state.textContent='transmis';
+  }
+  busy=false;
+}
+bFail.addEventListener('click',()=>run('fail'));
+bPass.addEventListener('click',()=>run('pass'));
+
+/* première visite de la section : on montre le rejet, puis on laisse la main */
+new IntersectionObserver((entries,obs)=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting)return;
+    setTimeout(()=>run('fail'),350);
+    obs.disconnect();
+  });
+},{threshold:.45}).observe(scanner);
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Dépendances et caches
+node_modules/
+.wrangler/
+.lighthouseci/
+
+# Secrets — ne jamais versionner
+.env
+.env.*
+*.pem
+*.key
+.dev.vars
+
+# Systèmes
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Journaux
+*.log
+npm-debug.log*

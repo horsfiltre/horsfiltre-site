@@ -1,0 +1,20 @@
+{
+  "name": "horsfiltre-site",
+  "private": true,
+  "description": "Site public de Hors Filtre",
+  "license": "UNLICENSED",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "lint:html": "html-validate \"public/**/*.html\"",
+    "lhci": "lhci autorun",
+    "dev": "wrangler pages dev public",
+    "check": "npm run lint:html"
+  },
+  "devDependencies": {
+    "@lhci/cli": "0.15.1",
+    "html-validate": "11.17.0",
+    "wrangler": "4.152.0"
+  }
+}
