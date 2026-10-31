@@ -1,596 +1,353 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Décroché — Accompagnement à la recherche d'alternance, CDI et stage</title>
-<meta name="description" content="Nous accompagnons les étudiants et jeunes diplômés à décrocher leur alternance, CDI ou stage. Refonte de CV optimisé ATS, stratégie de candidature, préparation aux entretiens, suivi jusqu'à la signature.">
-<meta property="og:title" content="Décroché — Le système de candidature est conçu contre vous. On vous apprend à le contourner.">
-<meta property="og:description" content="104 personnes accompagnées jusqu'à la signature. Refonte de CV, stratégie, entretiens, suivi.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hors Filtre — Accompagnement alternance, stage et premier emploi</title>
+<meta name="description" content="Votre CV est trié par un logiciel avant d’être lu. Hors Filtre vous apprend à passer au travers et vous accompagne jusqu’à la signature. Premier échange gratuit.">
+<meta name="theme-color" content="#FFFFFF">
+<meta property="og:title" content="Hors Filtre — le système de candidature est truqué">
+<meta property="og:description" content="104 personnes accompagnées sur 112 ont signé leur contrat. Premier échange gratuit.">
 <meta property="og:type" content="website">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,700;12..96,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-<style>
-/* ============================================================
-   DÉCROCHÉ — Design tokens
-   Concept : encre & signature. Le geste de signer un contrat.
-   ============================================================ */
-:root{
-  --paper:#FBFAF7;        /* papier chaud, pas crème-beige */
-  --paper-2:#F2F0EA;      /* papier ombré */
-  --ink:#16182C;          /* encre profonde, bleu-nuit */
-  --ink-soft:#4A4E66;
-  --ink-faint:#8C90A6;
-  --blue:#2440F0;         /* bleu stylo, accent unique */
-  --blue-wash:#E4E8FF;
-  --rule:#DEDBD2;
-  --ok:#0F8A5F;
-
-  --f-display:'Bricolage Grotesque',system-ui,sans-serif;
-  --f-text:'Instrument Sans',system-ui,sans-serif;
-
-  --maxw:1180px;
-  --pad:clamp(20px,5vw,40px);
-}
-
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
-body{
-  background:var(--paper);color:var(--ink);
-  font-family:var(--f-text);font-size:17px;line-height:1.6;
-  -webkit-font-smoothing:antialiased;overflow-x:hidden;
-}
-img{max-width:100%;display:block}
-a{color:inherit}
-:focus-visible{outline:3px solid var(--blue);outline-offset:3px;border-radius:2px}
-
-.wrap{max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
-section{padding-block:clamp(64px,10vw,128px)}
-
-h1,h2,h3{font-family:var(--f-display);line-height:1.02;letter-spacing:-.03em;font-weight:700}
-h1{font-size:clamp(44px,9.5vw,104px);font-weight:800}
-h2{font-size:clamp(32px,5.6vw,62px)}
-h3{font-size:clamp(20px,2.6vw,27px);letter-spacing:-.02em;line-height:1.15}
-p{max-width:66ch}
-
-/* ---------- NAV ---------- */
-nav{
-  position:fixed;inset:0 0 auto 0;z-index:100;
-  background:rgba(251,250,247,.82);backdrop-filter:blur(14px);
-  border-bottom:1px solid transparent;transition:border-color .3s;
-}
-nav.stuck{border-bottom-color:var(--rule)}
-.nav-in{display:flex;align-items:center;justify-content:space-between;height:66px;
-  max-width:var(--maxw);margin:0 auto;padding-inline:var(--pad)}
-.logo{font-family:var(--f-display);font-weight:800;font-size:21px;letter-spacing:-.045em;text-decoration:none}
-.logo span{color:var(--blue)}
-.nav-links{display:none;gap:30px;font-size:15px}
-.nav-links a{text-decoration:none;color:var(--ink-soft);transition:color .2s}
-.nav-links a:hover{color:var(--ink)}
-@media(min-width:900px){.nav-links{display:flex}}
-
-.btn{
-  display:inline-block;background:var(--ink);color:var(--paper);
-  padding:14px 26px;border-radius:100px;text-decoration:none;
-  font-family:var(--f-text);font-weight:600;font-size:16px;
-  border:none;cursor:pointer;transition:background .2s,transform .2s;
-}
-.btn:hover{background:var(--blue)}
-.btn:active{transform:scale(.98)}
-.btn-sm{padding:10px 20px;font-size:15px}
-.btn-line{background:transparent;color:var(--ink);border:1.5px solid var(--ink)}
-.btn-line:hover{background:var(--ink);color:var(--paper)}
-
-/* ---------- HERO ---------- */
-.hero{padding-top:clamp(100px,16vw,168px);padding-bottom:clamp(56px,8vw,96px)}
-.hero h1{max-width:14ch}
-.hero h1 .l{display:block;opacity:0;transform:translateY(.35em);
-  animation:rise .9s cubic-bezier(.2,.7,.3,1) forwards}
-.hero h1 .l:nth-child(2){animation-delay:.09s}
-.hero h1 .l:nth-child(3){animation-delay:.18s}
-@keyframes rise{to{opacity:1;transform:none}}
-@media(prefers-reduced-motion:reduce){.hero h1 .l{animation:none;opacity:1;transform:none}}
-
-.hero-sub{margin-top:44px;font-size:clamp(17px,2.1vw,21px);color:var(--ink-soft);max-width:52ch}
-.hero-cta{margin-top:36px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
-.hero-note{margin-top:18px;font-size:14.5px;color:var(--ink-faint)}
-
-/* signature underline sur le mot clé */
-.sig{position:relative;white-space:nowrap}
-.sig svg{position:absolute;left:0;right:0;bottom:-.16em;width:100%;height:.3em;overflow:visible}
-.sig path{fill:none;stroke:var(--blue);stroke-width:7;stroke-linecap:round;
-  stroke-dasharray:420;stroke-dashoffset:420;animation:draw 1.1s .75s ease-out forwards}
-@keyframes draw{to{stroke-dashoffset:0}}
-@media(prefers-reduced-motion:reduce){.sig path{animation:none;stroke-dashoffset:0}}
-
-/* ---------- BANDEAU CHIFFRES ---------- */
-.band{border-block:1px solid var(--rule);background:var(--paper-2)}
-.band .wrap{display:grid;gap:28px;padding-block:44px;
-  grid-template-columns:repeat(auto-fit,minmax(170px,1fr))}
-.stat b{font-family:var(--f-display);font-size:clamp(38px,5.4vw,56px);font-weight:800;
-  letter-spacing:-.04em;display:block;line-height:1}
-.stat span{font-size:15px;color:var(--ink-soft);display:block;margin-top:8px;max-width:24ch}
-
-/* ---------- PROBLEME ---------- */
-.pains{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
-  border-radius:18px;overflow:hidden;margin-top:48px}
-@media(min-width:760px){.pains{grid-template-columns:1fr 1fr}}
-.pain{background:var(--paper);padding:clamp(26px,3.4vw,38px)}
-.pain h3{margin-bottom:10px}
-.pain p{color:var(--ink-soft);font-size:16px}
-
-/* ---------- ATS (le moment fort) ---------- */
-.ats{background:var(--ink);color:var(--paper)}
-.ats h2{color:var(--paper)}
-.ats p{color:#B9BDD4}
-.ats-grid{display:grid;gap:44px;margin-top:52px}
-@media(min-width:940px){.ats-grid{grid-template-columns:1fr 1fr;gap:60px;align-items:center}}
-
-.scanner{position:relative;background:#1E2140;border:1px solid #2E3260;
-  border-radius:16px;padding:22px;overflow:hidden}
-.scan-head{display:flex;justify-content:space-between;align-items:center;
-  font-size:13px;color:#8C90B8;margin-bottom:18px;font-weight:500}
-.doc{display:grid;gap:9px}
-.line{height:9px;border-radius:3px;background:#343863;transition:background .45s}
-.line.w1{width:62%}.line.w2{width:88%}.line.w3{width:74%}.line.w4{width:94%}
-.line.w5{width:52%}.line.w6{width:81%}.line.w7{width:68%}
-.doc.pass .line{background:#1F6B52}
-.doc.fail .line{background:#5E2740}
-.beam{position:absolute;left:0;right:0;height:56px;pointer-events:none;
-  background:linear-gradient(180deg,transparent,rgba(36,64,240,.45),transparent);
-  top:-60px}
-.scanning .beam{animation:sweep 1.7s cubic-bezier(.4,0,.5,1)}
-@keyframes sweep{0%{top:-60px}100%{top:100%}}
-.verdict{margin-top:20px;font-family:var(--f-display);font-weight:700;font-size:19px;
-  min-height:1.5em;letter-spacing:-.02em}
-.verdict.fail{color:#FF8098}
-.verdict.pass{color:#4FD6A5}
-.scan-toggle{display:flex;gap:8px;margin-top:20px}
-.scan-toggle button{flex:1;background:#282C52;color:#C9CCE6;border:1px solid #3A3F72;
-  padding:11px;border-radius:9px;font-family:var(--f-text);font-size:14.5px;
-  font-weight:600;cursor:pointer;transition:.2s}
-.scan-toggle button[aria-pressed="true"]{background:var(--blue);border-color:var(--blue);color:#fff}
-
-.ats-points{display:grid;gap:24px;margin-top:34px}
-.ats-points li{list-style:none;padding-left:22px;position:relative;color:#B9BDD4;font-size:16.5px}
-.ats-points li::before{content:"";position:absolute;left:0;top:.62em;
-  width:9px;height:9px;border-radius:50%;background:var(--blue)}
-.ats-points b{color:var(--paper);font-weight:600}
-
-/* ---------- METHODE ---------- */
-.steps{counter-reset:s;margin-top:52px;border-top:1px solid var(--rule)}
-.step{counter-increment:s;border-bottom:1px solid var(--rule);
-  padding-block:clamp(26px,3.6vw,40px);display:grid;gap:14px}
-@media(min-width:820px){.step{grid-template-columns:78px 1fr 1.15fr;gap:32px;align-items:start}}
-.step::before{content:counter(s,decimal-leading-zero);font-family:var(--f-display);
-  font-weight:800;font-size:27px;color:var(--blue);letter-spacing:-.03em}
-.step p{color:var(--ink-soft);font-size:16.5px}
-.step-dur{font-size:14px;color:var(--ink-faint);margin-top:8px}
-
-/* ---------- TEMOIGNAGES ---------- */
-.quotes{display:grid;gap:20px;margin-top:48px}
-@media(min-width:780px){.quotes{grid-template-columns:repeat(3,1fr)}}
-.quote{background:var(--paper-2);border:1px solid var(--rule);border-radius:16px;
-  padding:28px;display:flex;flex-direction:column;gap:16px}
-.quote p{font-size:16.5px;flex:1}
-.quote footer{font-size:14.5px;color:var(--ink-faint);border-top:1px solid var(--rule);padding-top:14px}
-.quote footer b{display:block;color:var(--ink);font-size:15.5px;font-weight:600;margin-bottom:2px}
-
-/* ---------- EQUIPE ---------- */
-.team{display:grid;gap:1px;background:var(--rule);border:1px solid var(--rule);
-  border-radius:18px;overflow:hidden;margin-top:48px}
-@media(min-width:720px){.team{grid-template-columns:1fr 1fr}}
-@media(min-width:1040px){.team{grid-template-columns:repeat(4,1fr)}}
-.member{background:var(--paper);padding:30px 26px}
-.member .role{font-family:var(--f-display);font-weight:700;font-size:19px;letter-spacing:-.02em}
-.member .from{font-size:15px;color:var(--blue);margin-top:5px;font-weight:500}
-.member .bio{font-size:15px;color:var(--ink-soft);margin-top:12px}
-
-/* ---------- TARIFS ---------- */
-.price{background:var(--blue-wash);border-radius:20px;padding:clamp(30px,4.4vw,52px);margin-top:44px}
-.price-rows{display:grid;gap:26px;margin-top:28px}
-@media(min-width:800px){.price-rows{grid-template-columns:1fr 1fr;gap:44px}}
-.price-row h3{margin-bottom:10px}
-.price-row p{font-size:16.5px;color:var(--ink-soft)}
-.price-note{margin-top:30px;padding-top:24px;border-top:1px solid #C5CDFA;
-  font-size:16px;color:var(--ink-soft)}
-
-/* ---------- FAQ ---------- */
-.faq{margin-top:44px;border-top:1px solid var(--rule)}
-details{border-bottom:1px solid var(--rule)}
-summary{padding:22px 42px 22px 0;cursor:pointer;list-style:none;position:relative;
-  font-family:var(--f-display);font-weight:700;font-size:clamp(17px,2.1vw,21px);
-  letter-spacing:-.02em;line-height:1.3}
-summary::-webkit-details-marker{display:none}
-summary::after{content:"";position:absolute;right:8px;top:50%;width:13px;height:13px;
-  border-right:2px solid var(--blue);border-bottom:2px solid var(--blue);
-  transform:translateY(-70%) rotate(45deg);transition:transform .25s}
-details[open] summary::after{transform:translateY(-30%) rotate(-135deg)}
-details p{padding-bottom:24px;color:var(--ink-soft);font-size:16.5px}
-
-/* ---------- CTA FINAL ---------- */
-.final{background:var(--ink);color:var(--paper);text-align:left}
-.final h2{color:var(--paper);max-width:16ch}
-.final p{color:#B9BDD4;margin-top:20px;font-size:18px}
-.final .btn{background:var(--paper);color:var(--ink);margin-top:34px}
-.final .btn:hover{background:var(--blue);color:#fff}
-.contact{display:flex;flex-wrap:wrap;gap:12px 34px;margin-top:34px;
-  font-size:16px;color:#B9BDD4}
-.contact a{color:var(--paper);text-decoration:none;border-bottom:1px solid #4A4E80;padding-bottom:2px}
-.contact a:hover{border-color:var(--blue)}
-
-/* ---------- FOOTER ---------- */
-footer.site{border-top:1px solid var(--rule);padding-block:38px;font-size:14.5px;color:var(--ink-faint)}
-footer.site .wrap{display:flex;flex-wrap:wrap;gap:14px 30px;justify-content:space-between}
-footer.site a{color:var(--ink-soft);text-decoration:none}
-footer.site a:hover{color:var(--blue)}
-
-.lead{font-size:clamp(17px,2.2vw,21px);color:var(--ink-soft);margin-top:20px;max-width:56ch}
-</style>
+<meta property="og:url" content="https://horsfiltre.fr/">
+<meta property="og:image" content="https://horsfiltre.fr/og-image-1200x630.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://horsfiltre.fr/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
 </head>
 <body>
+<a class="skip" href="#contenu">Aller au contenu</a>
 
-<nav id="nav">
-  <div class="nav-in">
-    <a href="#top" class="logo">Décroché<span>.</span></a>
-    <div class="nav-links">
-      <a href="#probleme">Le problème</a>
-      <a href="#filtre">Le filtre</a>
-      <a href="#methode">La méthode</a>
-      <a href="#equipe">L'équipe</a>
-      <a href="#faq">Questions</a>
-    </div>
-    <a href="#rdv" class="btn btn-sm">Premier échange</a>
+<header class="top" id="top">
+  <div class="wrap top-in">
+    <a class="logo" href="#" aria-label="Hors Filtre, accueil"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 665 148" class="logo-svg" aria-hidden="true" focusable="false"><rect x="22" y="44" width="22" height="22" rx="3" fill="#121530"/><rect x="52" y="44" width="22" height="22" rx="3" fill="#121530"/><rect x="22" y="74" width="22" height="22" rx="3" fill="#121530"/><rect x="52" y="74" width="22" height="22" rx="3" fill="#121530"/><rect x="82" y="74" width="22" height="22" rx="3" fill="#121530"/><rect x="22" y="104" width="22" height="22" rx="3" fill="#121530"/><rect x="52" y="104" width="22" height="22" rx="3" fill="#121530"/><rect x="82" y="104" width="22" height="22" rx="3" fill="#121530"/><rect x="104" y="22" width="22" height="22" rx="3" fill="#FF5B1F"/><path d="M162.63936 126.0V51.120000000000005H180.16128V84.71616L179.26272 82.46976000000001Q181.80864 76.77888 186.25152 73.75872000000001Q190.6944 70.73856 196.98432 70.73856Q203.47392 70.73856 207.44256000000001 73.7088Q211.4112 76.67904 213.20832000000001 81.84576000000001Q215.00544 87.01248000000001 215.00544 93.60192V126.0H197.58336V95.74848Q197.58336 89.25888 196.13567999999998 86.46336Q194.688 83.66784 190.54464000000002 83.66784Q185.2032 83.66784 182.68224 87.88607999999999Q180.16128 92.10432 180.16128 100.59072V126.0ZM249.590016 127.34784Q241.20345600000002 127.34784 234.813696 123.7536Q228.423936 120.15936 224.854656 113.7696Q221.285376 107.37984 221.285376 99.0432Q221.285376 90.65664000000001 224.854656 84.29184000000001Q228.423936 77.92704 234.813696 74.3328Q241.20345600000002 70.73856 249.590016 70.73856Q257.976576 70.73856 264.36633600000005 74.3328Q270.756096 77.92704 274.35033599999997 84.29184000000001Q277.944576 90.65664000000001 277.944576 99.0432Q277.944576 107.42976 274.35033599999997 113.79456Q270.756096 120.15936 264.34137599999997 123.7536Q257.926656 127.34784 249.590016 127.34784ZM249.639936 114.81792Q254.332416 114.81792 257.078016 110.57472Q259.823616 106.33152 259.823616 99.0432Q259.823616 91.75488 257.078016 87.51168000000001Q254.332416 83.26848000000001 249.590016 83.26848000000001Q244.897536 83.26848000000001 242.151936 87.51168000000001Q239.406336 91.75488 239.406336 99.0432Q239.406336 106.33152 242.151936 110.57472Q244.897536 114.81792 249.639936 114.81792ZM284.773632 126.0V72.0864H301.796352V84.51648L301.047552 82.8192Q303.693312 76.62912 308.260992 73.68384Q312.828672 70.73856 318.519552 70.73856Q320.116992 70.73856 321.81427199999996 70.98816000000001Q323.511552 71.23776000000001 325.208832 71.83680000000001L324.060672 86.46336Q320.616192 85.51488 317.521152 85.51488Q314.725632 85.51488 312.029952 86.4384Q309.334272 87.36192 307.137792 89.53344Q304.941312 91.70496 303.618432 95.49888Q302.295552 99.2928 302.295552 105.0336V126.0ZM351.70636799999994 127.34784Q345.516288 127.34784 339.850368 125.65056000000001Q334.184448 123.95328 330.29068799999993 120.2592Q326.39692799999995 116.56512000000001 325.39852799999994 110.57472L340.92364799999996 107.47968Q341.32300799999996 111.32352 343.71916799999997 113.32032000000001Q346.115328 115.31712 350.957568 115.31712Q355.600128 115.31712 357.646848 113.71968000000001Q359.69356799999997 112.12224 359.69356799999997 110.0256Q359.69356799999997 108.17856 357.99628799999994 106.60608Q356.29900799999996 105.0336 351.756288 104.38464L347.46316799999994 103.7856Q344.51788799999997 103.38624 341.073408 102.63744Q337.628928 101.88864 334.53388799999993 100.31616Q331.43884799999995 98.74368 329.49196799999993 95.89823999999999Q327.54508799999996 93.05279999999999 327.54508799999996 88.46016Q327.54508799999996 83.06880000000001 330.44044799999995 79.10016Q333.335808 75.13152 338.627328 72.93504Q343.91884799999997 70.73856 351.00748799999997 70.73856Q357.14764799999995 70.73856 362.4142079999999 72.48576Q367.68076799999994 74.23295999999999 371.2999679999999 77.7024Q374.91916799999996 81.17184 375.96748799999995 86.36352L360.64204799999993 89.50847999999999Q360.292608 87.86112 359.4439679999999 86.23872Q358.59532799999994 84.61632 356.77324799999997 83.54304Q354.95116799999994 82.46976000000001 351.70636799999994 82.46976000000001Q348.21196799999996 82.46976000000001 346.36492799999996 83.79264Q344.51788799999997 85.11552 344.51788799999997 87.16224Q344.51788799999997 88.90944 345.865728 89.98272Q347.21356799999995 91.056 349.41004799999996 91.68Q351.60652799999997 92.304 354.15244799999994 92.70336L359.34412799999996 93.45215999999999Q363.63724799999994 94.0512 367.63084799999996 95.7984Q371.624448 97.54560000000001 374.19532799999996 100.84032Q376.76620799999995 104.13504 376.76620799999995 109.47648Q376.76620799999995 115.36704 373.47148799999997 119.36064Q370.176768 123.35424 364.48588799999993 125.35104000000001Q358.79500799999994 127.34784 351.70636799999994 127.34784ZM415.27249919999997 126.0V64.79808Q415.27249919999997 57.80928 418.89169919999995 54.46464Q422.5108992 51.120000000000005 430.3982592 51.120000000000005H442.6785792V63.6H435.2904192Q433.7428992 63.6 433.24369920000004 64.17408Q432.7444992 64.74816 432.7444992 66.39552V126.0ZM408.4833792 84.5664V72.0864H442.0795392V84.5664ZM448.85867520000005 126.0V72.0864H466.3805952V126.0ZM457.6445952 66.69504Q452.55275520000004 66.69504 449.60747520000007 63.74976Q446.66219520000004 60.80448 446.66219520000004 55.71264000000001Q446.66219520000004 50.6208 449.60747520000007 47.67552Q452.55275520000004 44.730239999999995 457.6445952 44.730239999999995Q462.7364352000001 44.730239999999995 465.6817152000001 47.67552Q468.62699520000007 50.6208 468.62699520000007 55.71264000000001Q468.62699520000007 60.80448 465.6817152000001 63.74976Q462.7364352000001 66.69504 457.6445952 66.69504ZM490.9811712 126.0Q483.8426112 126.0 480.2982912 122.7552Q476.7539712 119.5104 476.7539712 113.12064V51.120000000000005H494.27589120000005V110.72448Q494.27589120000005 112.42176 494.75013120000006 112.97088Q495.2243712 113.52 496.7718912 113.52H500.4659712V126.0ZM523.0198272 126.0Q515.8812672 126.0 512.3369472 122.7552Q508.7926272 119.5104 508.7926272 113.12064V84.5664H501.5043072V72.0864H508.7926272V61.80288L526.3145472 57.45984V72.0864H535.9491072V84.5664H526.3145472V110.72448Q526.3145472 112.42176 526.7887872 112.97088Q527.2630272 113.52 528.8105472 113.52H537.0473472V126.0ZM544.1260032 126.0V72.0864H561.1487232000001V84.51648L560.3999232000001 82.8192Q563.0456832000001 76.62912 567.6133632000001 73.68384Q572.1810432000001 70.73856 577.8719232000001 70.73856Q579.4693632000001 70.73856 581.1666432000001 70.98816000000001Q582.8639232 71.23776000000001 584.5612032 71.83680000000001L583.4130432000001 86.46336Q579.9685632000001 85.51488 576.8735232 85.51488Q574.0780032 85.51488 571.3823232 86.4384Q568.6866432 87.36192 566.4901632000001 89.53344Q564.2936832 91.70496 562.9708032000001 95.49888Q561.6479232 99.2928 561.6479232 105.0336V126.0ZM613.7044992 127.34784Q605.7172992 127.34784 599.1028991999999 123.8784Q592.4884992 120.40896000000001 588.5448191999999 114.04416Q584.6011391999999 107.67936 584.6011391999999 98.94336Q584.6011391999999 90.3072 588.4449791999999 83.99232Q592.2888191999999 77.67744 598.8782592 74.208Q605.4676992 70.73856 613.7044992 70.73856Q618.2472191999999 70.73856 622.9147392 72.0864Q627.5822592 73.43424 631.5259391999999 76.87872Q635.4696191999999 80.3232 637.8657791999999 86.53824Q640.2619391999999 92.75328 640.2619391999999 102.43776H595.8331392V93.25247999999999H624.6369791999999L623.3390592 95.69856Q622.9396992 91.00608 621.5169791999999 88.11072Q620.0942591999999 85.21536 617.9726592 83.89248Q615.8510592 82.56960000000001 613.2052991999999 82.56960000000001Q609.5611392 82.56960000000001 607.2398592 84.71616Q604.9185792 86.86272 603.8203392 90.58176Q602.7220992 94.3008 602.7220992 99.0432Q602.7220992 106.18176 605.2929792 110.47488Q607.8638592 114.768 613.5547392 114.768Q617.0491391999999 114.768 619.6449791999999 112.94592Q622.2408191999999 111.12384 623.7384192 107.18016L639.3134591999999 110.87424Q637.4164992 116.76480000000001 633.3480192 120.40896000000001Q629.2795391999999 124.05312 624.0878591999999 125.70048Q618.8961792 127.34784 613.7044992 127.34784Z" fill="#121530"/></svg></a>
+    <nav class="nav" aria-label="Navigation principale">
+      <ul class="nav-links">
+        <li><a href="#methode">Méthode</a></li>
+        <li><a href="#histoires">Histoires</a></li>
+        <li><a href="#tarifs">Tarifs</a></li>
+        <li><a href="#tarifs">Parents</a></li>
+      </ul>
+      <a class="btn btn-primary" href="#reserver">Réserver</a>
+      <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu" aria-label="Ouvrir le menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+    </nav>
   </div>
-</nav>
-
-<!-- ============ HERO ============ -->
-<header class="hero wrap" id="top">
-  <h1>
-    <span class="l">Le système de</span>
-    <span class="l">candidature est</span>
-    <span class="l"><span class="sig">truqué<svg viewBox="0 0 400 30" preserveAspectRatio="none" aria-hidden="true"><path d="M6 21 C 70 8, 150 26, 220 14 S 340 6, 394 17"/></svg></span>.</span>
-  </h1>
-
-  <p class="hero-sub">Quatre heures pour préparer un dossier. Huit secondes de lecture, quand un humain le lit. Nous sommes passés par là, et nous avons appris à contourner le tri. Aujourd'hui nous le faisons avec vous.</p>
-
-  <div class="hero-cta">
-    <a href="#rdv" class="btn">Réserver un premier échange</a>
-    <a href="#methode" class="btn btn-line">Voir la méthode</a>
+  <div class="menu-panel" id="menu">
+    <ul>
+      <li><a href="#methode">Méthode</a></li>
+      <li><a href="#histoires">Histoires</a></li>
+      <li><a href="#tarifs">Tarifs</a></li>
+      <li><a href="#tarifs">Vous êtes parent ?</a></li>
+    </ul>
   </div>
-  <p class="hero-note">Alternance, CDI, CDD, stage et freelance. Tous domaines, tous niveaux.</p>
 </header>
 
-<!-- ============ CHIFFRES ============ -->
-<div class="band">
-  <div class="wrap">
-    <div class="stat"><b data-count="112">0</b><span>candidats accompagnés depuis le lancement</span></div>
-    <div class="stat"><b data-count="104">0</b><span>ont signé leur contrat</span></div>
-    <div class="stat"><b data-count="4" data-suffix=" sem.">0</b><span>de durée moyenne d'accompagnement</span></div>
-    <div class="stat"><b data-count="10" data-suffix=" max">0</b><span>candidats suivis en parallèle par accompagnant</span></div>
-  </div>
-</div>
+<main id="contenu">
 
-<!-- ============ PROBLEME ============ -->
-<section id="probleme" class="wrap">
-  <h2>Vous ne cherchez pas mal.<br>Vous cherchez à l'aveugle.</h2>
-  <p class="lead">Personne ne vous a jamais expliqué comment votre candidature est réellement traitée une fois envoyée. Résultat : vous travaillez dur sur les mauvaises choses.</p>
-
-  <div class="pains">
-    <article class="pain">
-      <h3>Le dimanche soir qui dérape</h3>
-      <p>Vous commencez à 18h pour envoyer cinq candidatures. À minuit vous en avez fait trois, vous êtes vidé, et lundi est déjà gâché.</p>
-    </article>
-    <article class="pain">
-      <h3>Le copier-coller que vous détestez</h3>
-      <p>Vous savez qu'il faudrait personnaliser. Mais à la quinzième lettre, vous changez juste le nom de l'entreprise — par épuisement, pas par paresse.</p>
-    </article>
-    <article class="pain">
-      <h3>Le silence radio</h3>
-      <p>Cinquante candidatures, deux réponses automatiques. Vous ne savez même pas si un humain a ouvert votre CV. Souvent, la réponse est non.</p>
-    </article>
-    <article class="pain">
-      <h3>L'entretien qui vous surprend</h3>
-      <p>Le recruteur appelle dans trente minutes. Vous ne retrouvez plus quelle version du CV vous lui avez envoyée, ni ce que fait l'entreprise.</p>
-    </article>
+<section class="hero" aria-labelledby="titre">
+  <div class="wrap hero-in">
+    <div class="hero-copy">
+      <h1 id="titre">Le système de candidature est <span class="sticker">truqué.</span></h1>
+      <p class="lede">On vous apprend à le traverser, et on le fait avec vous jusqu’à la signature de votre alternance, stage ou premier emploi.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#reserver">Réserver un échange gratuit</a>
+        <a class="btn btn-soft" href="#test">Tester mon CV</a>
+      </div>
+      <p class="proof"><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span><strong>104 sur 112</strong> personnes accompagnées ont signé leur contrat.</span></p>
+    </div>
+    <div class="stack" id="stack" role="img" aria-label="Trois cartes : un CV resté sans réponse, un entretien planifié, puis un contrat signé">
+      <svg class="hero-cubes" viewBox="0 0 520 520" aria-hidden="true" focusable="false"><polygon points="470.0,6.0 496.0,21.0 470.0,36.0 444.0,21.0" fill="#FF9466"/><polygon points="444.0,21.0 470.0,36.0 470.0,66.0 444.0,51.0" fill="#E2470F"/><polygon points="470.0,36.0 496.0,21.0 496.0,51.0 470.0,66.0" fill="#FF6A33"/><polygon points="486.0,400.0 512.0,415.0 486.0,430.0 460.0,415.0" fill="#6EE7C0"/><polygon points="460.0,415.0 486.0,430.0 486.0,460.0 460.0,445.0" fill="#14A97B"/><polygon points="486.0,430.0 512.0,415.0 512.0,445.0 486.0,460.0" fill="#2BD4A4"/></svg>
+      <div class="card card-1" aria-hidden="true">
+        <span class="k">Votre CV, avant</span>
+        <span class="chip chip-ko">Resté sans réponse</span>
+        <span class="bar w72"></span><span class="bar w94"></span><span class="bar w58"></span>
+      </div>
+      <div class="card card-2" aria-hidden="true">
+        <span class="k">[Entreprise], alternance</span>
+        <span class="big">Entretien technique</span>
+        <span class="chip chip-info">Planifié</span>
+      </div>
+      <div class="card card-3" aria-hidden="true">
+        <span class="k">Quelques semaines plus tard</span>
+        <span class="big">Contrat signé</span>
+        <span class="chip chip-ok">Signée</span>
+      </div>
+    </div>
   </div>
 </section>
 
-<!-- ============ ATS : LE MOMENT FORT ============ -->
-<section id="filtre" class="ats">
-  <div class="wrap">
-    <h2>Votre CV est d'abord lu<br>par une machine.</h2>
-    <p class="lead">Dans la plupart des grandes entreprises, un logiciel de tri analyse votre CV avant qu'un recruteur ne le voie. S'il ne comprend pas votre document, personne ne le lira jamais. Ce n'est pas une question de niveau : c'est une question de format.</p>
-
-    <div class="ats-grid">
-      <div>
-        <div class="scanner" id="scanner">
-          <div class="scan-head">
-            <span>Analyse automatique du document</span>
-            <span id="scan-state">en attente</span>
-          </div>
-          <div class="doc" id="doc">
-            <div class="line w1"></div><div class="line w2"></div><div class="line w3"></div>
-            <div class="line w4"></div><div class="line w5"></div><div class="line w6"></div>
-            <div class="line w7"></div>
-          </div>
-          <div class="beam" id="beam"></div>
-          <p class="verdict" id="verdict"></p>
-          <div class="scan-toggle">
-            <button type="button" id="btn-fail" aria-pressed="false">CV classique</button>
-            <button type="button" id="btn-pass" aria-pressed="false">CV retravaillé</button>
-          </div>
+<section class="film" id="filtre" aria-labelledby="t-filtre">
+  <div class="film-track">
+    <div class="film-stage">
+      <canvas class="film-canvas" aria-hidden="true"></canvas>
+      <svg class="film-word film-word-h" width="665" height="148" viewBox="0 0 665 148" aria-hidden="true" focusable="false"><path d="M162.63936 126.0V51.120000000000005H180.16128V84.71616L179.26272 82.46976000000001Q181.80864 76.77888 186.25152 73.75872000000001Q190.6944 70.73856 196.98432 70.73856Q203.47392 70.73856 207.44256000000001 73.7088Q211.4112 76.67904 213.20832000000001 81.84576000000001Q215.00544 87.01248000000001 215.00544 93.60192V126.0H197.58336V95.74848Q197.58336 89.25888 196.13567999999998 86.46336Q194.688 83.66784 190.54464000000002 83.66784Q185.2032 83.66784 182.68224 87.88607999999999Q180.16128 92.10432 180.16128 100.59072V126.0ZM249.590016 127.34784Q241.20345600000002 127.34784 234.813696 123.7536Q228.423936 120.15936 224.854656 113.7696Q221.285376 107.37984 221.285376 99.0432Q221.285376 90.65664000000001 224.854656 84.29184000000001Q228.423936 77.92704 234.813696 74.3328Q241.20345600000002 70.73856 249.590016 70.73856Q257.976576 70.73856 264.36633600000005 74.3328Q270.756096 77.92704 274.35033599999997 84.29184000000001Q277.944576 90.65664000000001 277.944576 99.0432Q277.944576 107.42976 274.35033599999997 113.79456Q270.756096 120.15936 264.34137599999997 123.7536Q257.926656 127.34784 249.590016 127.34784ZM249.639936 114.81792Q254.332416 114.81792 257.078016 110.57472Q259.823616 106.33152 259.823616 99.0432Q259.823616 91.75488 257.078016 87.51168000000001Q254.332416 83.26848000000001 249.590016 83.26848000000001Q244.897536 83.26848000000001 242.151936 87.51168000000001Q239.406336 91.75488 239.406336 99.0432Q239.406336 106.33152 242.151936 110.57472Q244.897536 114.81792 249.639936 114.81792ZM284.773632 126.0V72.0864H301.796352V84.51648L301.047552 82.8192Q303.693312 76.62912 308.260992 73.68384Q312.828672 70.73856 318.519552 70.73856Q320.116992 70.73856 321.81427199999996 70.98816000000001Q323.511552 71.23776000000001 325.208832 71.83680000000001L324.060672 86.46336Q320.616192 85.51488 317.521152 85.51488Q314.725632 85.51488 312.029952 86.4384Q309.334272 87.36192 307.137792 89.53344Q304.941312 91.70496 303.618432 95.49888Q302.295552 99.2928 302.295552 105.0336V126.0ZM351.70636799999994 127.34784Q345.516288 127.34784 339.850368 125.65056000000001Q334.184448 123.95328 330.29068799999993 120.2592Q326.39692799999995 116.56512000000001 325.39852799999994 110.57472L340.92364799999996 107.47968Q341.32300799999996 111.32352 343.71916799999997 113.32032000000001Q346.115328 115.31712 350.957568 115.31712Q355.600128 115.31712 357.646848 113.71968000000001Q359.69356799999997 112.12224 359.69356799999997 110.0256Q359.69356799999997 108.17856 357.99628799999994 106.60608Q356.29900799999996 105.0336 351.756288 104.38464L347.46316799999994 103.7856Q344.51788799999997 103.38624 341.073408 102.63744Q337.628928 101.88864 334.53388799999993 100.31616Q331.43884799999995 98.74368 329.49196799999993 95.89823999999999Q327.54508799999996 93.05279999999999 327.54508799999996 88.46016Q327.54508799999996 83.06880000000001 330.44044799999995 79.10016Q333.335808 75.13152 338.627328 72.93504Q343.91884799999997 70.73856 351.00748799999997 70.73856Q357.14764799999995 70.73856 362.4142079999999 72.48576Q367.68076799999994 74.23295999999999 371.2999679999999 77.7024Q374.91916799999996 81.17184 375.96748799999995 86.36352L360.64204799999993 89.50847999999999Q360.292608 87.86112 359.4439679999999 86.23872Q358.59532799999994 84.61632 356.77324799999997 83.54304Q354.95116799999994 82.46976000000001 351.70636799999994 82.46976000000001Q348.21196799999996 82.46976000000001 346.36492799999996 83.79264Q344.51788799999997 85.11552 344.51788799999997 87.16224Q344.51788799999997 88.90944 345.865728 89.98272Q347.21356799999995 91.056 349.41004799999996 91.68Q351.60652799999997 92.304 354.15244799999994 92.70336L359.34412799999996 93.45215999999999Q363.63724799999994 94.0512 367.63084799999996 95.7984Q371.624448 97.54560000000001 374.19532799999996 100.84032Q376.76620799999995 104.13504 376.76620799999995 109.47648Q376.76620799999995 115.36704 373.47148799999997 119.36064Q370.176768 123.35424 364.48588799999993 125.35104000000001Q358.79500799999994 127.34784 351.70636799999994 127.34784ZM415.27249919999997 126.0V64.79808Q415.27249919999997 57.80928 418.89169919999995 54.46464Q422.5108992 51.120000000000005 430.3982592 51.120000000000005H442.6785792V63.6H435.2904192Q433.7428992 63.6 433.24369920000004 64.17408Q432.7444992 64.74816 432.7444992 66.39552V126.0ZM408.4833792 84.5664V72.0864H442.0795392V84.5664ZM448.85867520000005 126.0V72.0864H466.3805952V126.0ZM457.6445952 66.69504Q452.55275520000004 66.69504 449.60747520000007 63.74976Q446.66219520000004 60.80448 446.66219520000004 55.71264000000001Q446.66219520000004 50.6208 449.60747520000007 47.67552Q452.55275520000004 44.730239999999995 457.6445952 44.730239999999995Q462.7364352000001 44.730239999999995 465.6817152000001 47.67552Q468.62699520000007 50.6208 468.62699520000007 55.71264000000001Q468.62699520000007 60.80448 465.6817152000001 63.74976Q462.7364352000001 66.69504 457.6445952 66.69504ZM490.9811712 126.0Q483.8426112 126.0 480.2982912 122.7552Q476.7539712 119.5104 476.7539712 113.12064V51.120000000000005H494.27589120000005V110.72448Q494.27589120000005 112.42176 494.75013120000006 112.97088Q495.2243712 113.52 496.7718912 113.52H500.4659712V126.0ZM523.0198272 126.0Q515.8812672 126.0 512.3369472 122.7552Q508.7926272 119.5104 508.7926272 113.12064V84.5664H501.5043072V72.0864H508.7926272V61.80288L526.3145472 57.45984V72.0864H535.9491072V84.5664H526.3145472V110.72448Q526.3145472 112.42176 526.7887872 112.97088Q527.2630272 113.52 528.8105472 113.52H537.0473472V126.0ZM544.1260032 126.0V72.0864H561.1487232000001V84.51648L560.3999232000001 82.8192Q563.0456832000001 76.62912 567.6133632000001 73.68384Q572.1810432000001 70.73856 577.8719232000001 70.73856Q579.4693632000001 70.73856 581.1666432000001 70.98816000000001Q582.8639232 71.23776000000001 584.5612032 71.83680000000001L583.4130432000001 86.46336Q579.9685632000001 85.51488 576.8735232 85.51488Q574.0780032 85.51488 571.3823232 86.4384Q568.6866432 87.36192 566.4901632000001 89.53344Q564.2936832 91.70496 562.9708032000001 95.49888Q561.6479232 99.2928 561.6479232 105.0336V126.0ZM613.7044992 127.34784Q605.7172992 127.34784 599.1028991999999 123.8784Q592.4884992 120.40896000000001 588.5448191999999 114.04416Q584.6011391999999 107.67936 584.6011391999999 98.94336Q584.6011391999999 90.3072 588.4449791999999 83.99232Q592.2888191999999 77.67744 598.8782592 74.208Q605.4676992 70.73856 613.7044992 70.73856Q618.2472191999999 70.73856 622.9147392 72.0864Q627.5822592 73.43424 631.5259391999999 76.87872Q635.4696191999999 80.3232 637.8657791999999 86.53824Q640.2619391999999 92.75328 640.2619391999999 102.43776H595.8331392V93.25247999999999H624.6369791999999L623.3390592 95.69856Q622.9396992 91.00608 621.5169791999999 88.11072Q620.0942591999999 85.21536 617.9726592 83.89248Q615.8510592 82.56960000000001 613.2052991999999 82.56960000000001Q609.5611392 82.56960000000001 607.2398592 84.71616Q604.9185792 86.86272 603.8203392 90.58176Q602.7220992 94.3008 602.7220992 99.0432Q602.7220992 106.18176 605.2929792 110.47488Q607.8638592 114.768 613.5547392 114.768Q617.0491391999999 114.768 619.6449791999999 112.94592Q622.2408191999999 111.12384 623.7384192 107.18016L639.3134591999999 110.87424Q637.4164992 116.76480000000001 633.3480192 120.40896000000001Q629.2795391999999 124.05312 624.0878591999999 125.70048Q618.8961792 127.34784 613.7044992 127.34784Z" fill="#F2F3F7"/></svg>
+      <svg class="film-word film-word-s" width="330" height="148" viewBox="0 0 330 148" aria-hidden="true" focusable="false"><path d="M160.26155969634232 70.06270334220645V22.000000000000007H171.5082322784186V43.56413289953663L170.93147983831213 42.12225179927044Q172.56561175194716 38.469486345262744 175.4173321502514 36.53095731046042Q178.26905254855566 34.592428275658094 182.306319629301 34.592428275658094Q186.47175391895888 34.592428275658094 189.01907719609582 36.49891550823228Q191.56640047323276 38.405402740806466 192.7199053534457 41.72172927141871Q193.87341023365866 45.03805580203096 193.87341023365866 49.26757369614513V70.06270334220645H182.69082125603865V50.64537119195504Q182.69082125603865 46.479936902297155 181.76160899142263 44.685595977521444Q180.83239672680665 42.891255052745734 178.17292714187124 42.891255052745734Q174.74445430346051 42.891255052745734 173.12634329093956 45.59878734102337Q171.5082322784186 48.306319629301 171.5082322784186 53.75342600808439V70.06270334220645ZM216.07197081731243 70.92783200236616Q210.68894804298532 70.92783200236616 206.5875973577837 68.62082224194026Q202.48624667258207 66.31381248151435 200.19525781327025 62.21246179631273Q197.9042689539584 58.111111111111114 197.9042689539584 52.76013013901213Q197.9042689539584 47.377107364685 200.19525781327025 43.291777580597454Q202.48624667258207 39.20644779650991 206.5875973577837 36.89943803608401Q210.68894804298532 34.592428275658094 216.07197081731243 34.592428275658094Q221.45499359163955 34.592428275658094 225.55634427684117 36.89943803608401Q229.6576949620428 39.20644779650991 231.9647047224687 43.291777580597454Q234.2717144828946 47.377107364685 234.2717144828946 52.76013013901213Q234.2717144828946 58.14315291333925 231.9647047224687 62.2284826974268Q229.6576949620428 66.31381248151435 225.5403233757271 68.62082224194026Q221.4229517894114 70.92783200236616 216.07197081731243 70.92783200236616ZM216.10401261954055 62.88533964310362Q219.1159420289855 62.88533964310362 220.87824115153308 60.16178645371192Q222.64054027408065 57.43823326432022 222.64054027408065 52.76013013901213Q222.64054027408065 48.082027013704035 220.87824115153308 45.358473824312334Q219.1159420289855 42.63492063492063 216.07197081731243 42.63492063492063Q213.0600414078675 42.63492063492063 211.2977422853199 45.358473824312334Q209.53544316277234 48.082027013704035 209.53544316277234 52.76013013901213Q209.53544316277234 57.43823326432022 211.2977422853199 60.16178645371192Q213.0600414078675 62.88533964310362 216.10401261954055 62.88533964310362ZM238.65503302770384 70.06270334220645V35.457556935817806H249.58128758749876V43.43596569062407L249.1006605540767 42.346544414867395Q250.798876072168 38.37336093857833 253.7307009760426 36.48289460711821Q256.6625258799172 34.592428275658094 260.31529133392485 34.592428275658094Q261.34062900522525 34.592428275658094 262.43005028098196 34.75263728679878Q263.5194715567386 34.91284629793947 264.6088928324953 35.29734792467712L263.87193138124815 44.685595977521444Q261.66104702750664 44.076801735186834 259.67445528936213 44.076801735186834Q257.8801143645864 44.076801735186834 256.149857044267 44.66957507640738Q254.41959972394756 45.26234841762792 253.0097604259095 46.65616681455191Q251.59992112787143 48.0499852114759 250.7508133688258 50.485162180814356Q249.90170560978015 52.92033915015281 249.90170560978015 56.60514640638864V70.06270334220645ZM281.61668145519076 70.92783200236616Q277.6434979789017 70.92783200236616 274.00675342600806 69.83841072660948Q270.37000887311444 68.7489894508528 267.87074829931976 66.37789608597062Q265.371487725525 64.00680272108843 264.73065168096224 60.16178645371192L274.69565217391306 58.175194715567386Q274.95198659173815 60.642413487133986 276.48999309868873 61.924085576259486Q278.02799960563937 63.20575766538499 281.1360544217687 63.20575766538499Q284.1159420289855 63.20575766538499 285.42965592033914 62.18041999408459Q286.7433698116928 61.15508232278419 286.7433698116928 59.8093266292024Q286.7433698116928 58.62377994676132 285.65394853593614 57.61446317657498Q284.56452726017943 56.60514640638864 281.6487232574189 56.18860297742285L278.8931282657991 55.8041013506852Q277.00266193433896 55.5477669328601 274.79177758059745 55.06713989943803Q272.58089322685595 54.58651286601597 270.5943014887114 53.577196095829635Q268.60770975056687 52.567879325643304 267.3580794636695 50.74149659863946Q266.1084491767722 48.91511387163561 266.1084491767722 45.96726806664695Q266.1084491767722 42.50675342600809 267.96687370600415 39.95943014887115Q269.8252982352361 37.4121068717342 273.2217292714187 36.002267573696145Q276.61816030760133 34.592428275658094 281.1680962239968 34.592428275658094Q285.10923789805776 34.592428275658094 288.4896480331263 35.71389135364291Q291.8700581681948 36.83535443162773 294.1930888297348 39.06225968648329Q296.51611949127476 41.28916494133885 297.18899733806563 44.62151237306517L287.3521640540274 46.64014591343784Q287.1278714384304 45.5827664399093 286.5831608005521 44.541407867494826Q286.03845016267377 43.50004929508035 284.86892438134674 42.811150547175394Q283.6993986000197 42.12225179927044 281.61668145519076 42.12225179927044Q279.37375529922116 42.12225179927044 278.18820861678006 42.97135955831608Q277.00266193433896 43.82046731736173 277.00266193433896 45.134181208715376Q277.00266193433896 46.25564428670019 277.8677905944987 46.94454303460515Q278.7329192546584 47.633441782510104 280.1427585526965 48.033964310361824Q281.5525978507345 48.434486838213545 283.1867297643695 48.690821256038646L286.51907719609585 49.17144828946071Q289.2746721877157 49.555949916198365 291.8380163659667 50.677412994183186Q294.4013605442177 51.798876072168 296.05151335896676 53.91363501922508Q297.70166617371586 56.02839396628217 297.70166617371586 59.45686680469289Q297.70166617371586 63.23779946761313 295.5869072266588 65.80114364586414Q293.4721482796017 68.36448782411516 289.819382825594 69.64615991324067Q286.1666173715863 70.92783200236616 281.61668145519076 70.92783200236616Z M161.51118998323966 126.0V86.71675046830327Q161.51118998323966 82.23089815636399 163.83422064477963 80.08409740707877Q166.15725130631964 77.93729665779355 171.21985605836537 77.93729665779355H179.10213940648723V85.94774721482796H174.35995267672286Q173.3666568076506 85.94774721482796 173.0462387853692 86.31622794045154Q172.72582076308785 86.68470866607512 172.72582076308785 87.74208813960368V126.0ZM157.15350488021295 99.40530415064578V91.39485359361136H178.71763777974957V99.40530415064578ZM183.0689145223307 126.0V91.39485359361136H194.31558710440697V126.0ZM188.7082717144829 87.9343389529725Q185.44000788721286 87.9343389529725 183.54954155575274 86.04387262151238Q181.65907522429262 84.15340629005226 181.65907522429262 80.88514246278223Q181.65907522429262 77.61687863551218 183.54954155575274 75.72641230405206Q185.44000788721286 73.83594597259194 188.7082717144829 73.83594597259194Q191.97653554175292 73.83594597259194 193.86700187321304 75.72641230405206Q195.75746820467316 77.61687863551218 195.75746820467316 80.88514246278223Q195.75746820467316 84.15340629005226 193.86700187321304 86.04387262151238Q191.97653554175292 87.9343389529725 188.7082717144829 87.9343389529725ZM210.1057872424332 126.0Q205.52380952380952 126.0 203.24884156561177 123.91728285517105Q200.973873607414 121.8345657103421 200.973873607414 117.7332150251405V77.93729665779355H212.22054618949028V116.19520851818989Q212.22054618949028 117.28462979394656 212.5249433106576 117.63708961845609Q212.8293404318249 117.9895494429656 213.82263630089716 117.9895494429656H216.19372966577936V126.0ZM230.6702159124519 126.0Q226.08823819382823 126.0 223.81327023563045 123.91728285517105Q221.5383022774327 121.8345657103421 221.5383022774327 117.7332150251405V99.40530415064578H216.8601991521246V91.39485359361136H221.5383022774327V84.794242334615L232.78497485950902 82.00660554076703V91.39485359361136H238.96904268953958V99.40530415064578H232.78497485950902V116.19520851818989Q232.78497485950902 117.28462979394656 233.08937198067633 117.63708961845609Q233.39376910184362 117.9895494429656 234.3870649709159 117.9895494429656H239.6739623385586V126.0ZM244.2174898945085 126.0V91.39485359361136H255.14374445430343V99.37326234841763L254.66311742088138 98.28384107266095Q256.3613329389727 94.31065759637188 259.2931578428472 92.42019126491176Q262.2249827467218 90.52972493345165 265.8777482007295 90.52972493345165Q266.9030858720299 90.52972493345165 267.9925071477866 90.68993394459233Q269.08192842354333 90.85014295573302 270.1713496993 91.23464458247068L269.4343882480528 100.622892635315Q267.2235038943113 100.01409839298039 265.2369121561668 100.01409839298039Q263.44257123139107 100.01409839298039 261.71231391107165 100.60687173420092Q259.9820565907522 101.19964507542147 258.5722172927142 102.59346347234546Q257.1623779946761 103.98728186926945 256.31327023563045 106.42245883860791Q255.46416247658482 108.85763580794637 255.46416247658482 112.5424430641822V126.0ZM288.87735384008676 126.86512866015971Q283.7506654835847 126.86512866015971 279.5051266883565 124.63822340530415Q275.25958789312824 122.41131815044858 272.7282855171054 118.32598836636103Q270.1969831410825 114.24065858227348 270.1969831410825 108.6333431923494Q270.1969831410825 103.09011140688159 272.6642019126491 99.03682342502219Q275.1314206842157 94.98353544316278 279.36093857832986 92.75663018830721Q283.59045647244403 90.52972493345165 288.87735384008676 90.52972493345165Q291.7931578428473 90.52972493345165 294.7890663511781 91.39485359361137Q297.784974859509 92.25998225377108 300.31627723553186 94.47086660751258Q302.84757961155475 96.68175096125407 304.38558611850533 100.6709553386572Q305.92359262545597 104.66015971606033 305.92359262545597 110.87626934831904H277.4063886424135V104.98057773834171H295.8945085280489L295.06142167011734 106.55062604752047Q294.8050872522922 103.53869663807552 293.89189588879026 101.68027210884354Q292.9787045252884 99.82184757961156 291.6169279305925 98.97273982056592Q290.2551513358967 98.12363206152027 288.55693581780537 98.12363206152027Q286.2178842551513 98.12363206152027 284.72794045154296 99.50142955733018Q283.23799664793455 100.8792270531401 282.5330769989155 103.26634131913636Q281.82815734989646 105.6534555851326 281.82815734989646 108.69742679680567Q281.82815734989646 113.27940451542936 283.47831016464556 116.0349995070492Q285.12846297939467 118.79059449866904 288.78122843340236 118.79059449866904Q291.02415458937196 118.79059449866904 292.69032830523514 117.62106871734201Q294.3565020210983 116.45154293601499 295.3177560879424 113.92024055999211L305.31479838312134 116.2913339248743Q304.09720989845215 120.07226658779454 301.4858030168589 122.41131815044858Q298.87439613526567 124.75036971310263 295.54204870353936 125.80774918663117Q292.20970127181306 126.86512866015971 288.87735384008676 126.86512866015971Z" fill="#F2F3F7"/></svg>
+      <ol class="film-bar" aria-hidden="true"><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li><li><i></i></li></ol>
+      <a class="film-skip" href="#histoires">Passer</a>
+      <span class="film-you" aria-hidden="true">Votre place&nbsp;?</span>
+      <div class="film-ui">
+        <svg class="film-poster" viewBox="0 0 148 148" aria-hidden="true" focusable="false"><defs><radialGradient id="film-glow"><stop offset="0" stop-color="#FF5B1F" stop-opacity=".55"/><stop offset="1" stop-color="#FF5B1F" stop-opacity="0"/></radialGradient></defs><circle cx="115" cy="33" r="34" fill="url(#film-glow)"/><g fill="#F2F3F7"><rect x="22" y="44" width="22" height="22" rx="3"/><rect x="52" y="44" width="22" height="22" rx="3"/><rect x="22" y="74" width="22" height="22" rx="3"/><rect x="52" y="74" width="22" height="22" rx="3"/><rect x="82" y="74" width="22" height="22" rx="3"/><rect x="22" y="104" width="22" height="22" rx="3"/><rect x="52" y="104" width="22" height="22" rx="3"/><rect x="82" y="104" width="22" height="22" rx="3"/></g><rect x="104" y="22" width="22" height="22" rx="3" fill="#FF5B1F"/></svg>
+        <div class="cap is-title" data-cap="0">
+          <h2 id="t-filtre">Pourquoi personne ne vous répond&nbsp;?</h2>
+          <p class="cap-hint"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>Faites défiler&nbsp;: voici ce qui arrive à votre CV.</p>
+        </div>
+        <div class="cap" data-cap="1">
+          <p class="cap-big">Une offre.<br>Des centaines de CV.</p>
+          <p class="cap-small">Et 92&nbsp;% des étudiants retouchent leur candidature avec l’IA. Sources&nbsp;: <a href="https://enhancv.com/blog/does-ats-reject-resumes/" target="_blank" rel="noopener">Enhancv, 2025</a> · <a href="https://www.edhec.edu/sites/default/files/2026-02/CareerBarometer_1225_JTxEDHEC_FR-compressed_0.pdf" target="_blank" rel="noopener">JobTeaser × EDHEC, édition 2026</a></p>
+        </div>
+        <div class="cap" data-cap="2">
+          <p class="cap-big">Triés en quelques secondes.</p>
+          <ol class="cap-chips"><li data-chip="0">Critères éliminatoires</li><li data-chip="1">Mots-clés de l’offre</li><li data-chip="2">7&nbsp;secondes par CV</li></ol>
+          <p class="cap-small">Ce que décrivent les recruteurs&nbsp;: <a href="https://enhancv.com/blog/does-ats-reject-resumes/" target="_blank" rel="noopener">Enhancv, 2025</a> · <a href="https://www.hrdive.com/news/recruiters-spend-74-seconds-looking-at-your-resume/541582/" target="_blank" rel="noopener">Ladders, 2018</a></p>
+        </div>
+        <div class="cap" data-cap="3">
+          <p class="cap-big">La plupart n’iront pas plus loin.</p>
+          <p class="cap-small">57&nbsp;% des recruteurs reconnaissent avoir déjà laissé un candidat sans nouvelles. <a href="https://fr.indeed.com/lead/ghosting-en-recrutement" target="_blank" rel="noopener">Indeed × OpinionWay, 2023</a></p>
+        </div>
+        <div class="cap" data-cap="4">
+          <p class="cap-big">Le vôtre doit sortir de la&nbsp;pile.</p>
+        </div>
+        <div class="cap is-final" data-cap="5">
+          <p class="cap-count" aria-hidden="true"><span data-count>104</span><span class="of">/&nbsp;112</span></p>
+          <p class="cap-mid"><span class="visually-hidden">104 sur 112 </span>personnes accompagnées ont signé leur contrat.</p>
+          <p class="cap-big2">La prochaine place est peut-être <em>la&nbsp;vôtre</em>.</p>
+          <div class="cap-cta"><a class="btn btn-primary" href="#reserver">Réserver un échange gratuit</a><a class="cap-link" href="#">Comment on compte nos chiffres</a></div>
         </div>
       </div>
-
-      <div>
-        <ul class="ats-points">
-          <li><b>Les colonnes, tableaux et encadrés</b> sont fréquemment mal interprétés par les logiciels de tri. Une mise en page élégante à l'œil peut être illisible pour la machine.</li>
-          <li><b>Les mots-clés de l'offre</b> doivent apparaître dans vos formulations. Si l'annonce dit « supervision industrielle » et que votre CV dit « surveillance des machines », le rapprochement n'est pas garanti.</li>
-          <li><b>Les grands groupes utilisent de plus en plus l'IA</b> pour résumer et classer les candidatures. Un CV flou produit un résumé flou — et un mauvais classement.</li>
-          <li><b>Le fond ne suffit pas.</b> Un excellent profil mal structuré est écarté avant d'avoir été jugé sur ses compétences.</li>
-        </ul>
-        <p style="margin-top:30px;color:#8C90B8;font-size:15px">Illustration pédagogique. Le comportement exact varie selon les logiciels et les entreprises.</p>
-      </div>
     </div>
   </div>
 </section>
 
-<!-- ============ METHODE ============ -->
-<section id="methode" class="wrap">
-  <h2>Quatre étapes.<br>Trois à quatre semaines.</h2>
-  <p class="lead">Rien de magique : un travail précis, fait dans le bon ordre, avec quelqu'un qui a déjà vu ce qui fonctionne et ce qui ne fonctionne pas.</p>
-
-  <div class="steps">
-    <article class="step">
-      <h3>Reconstruction du CV</h3>
-      <div>
-        <p>Nous reprenons votre CV à zéro : structure lisible par les logiciels de tri, reformulation complète de vos missions, mise en avant de ce qui compte réellement pour votre cible. Ce n'est pas une relecture, c'est une réécriture.</p>
-        <p class="step-dur">Environ 5 jours, avec un aller-retour de validation.</p>
-      </div>
-    </article>
-
-    <article class="step">
-      <h3>Stratégie de candidature</h3>
-      <div>
-        <p>Nous construisons ensemble une liste courte d'entreprises réellement pertinentes pour votre profil, plutôt que deux cents candidatures envoyées au hasard. Nous identifions les bons interlocuteurs et le bon moment pour les contacter.</p>
-        <p class="step-dur">Environ 3 jours.</p>
-      </div>
-    </article>
-
-    <article class="step">
-      <h3>Préparation aux entretiens</h3>
-      <div>
-        <p>Simulations en visio, questions techniques propres à votre domaine, préparation des sujets qui déstabilisent : vos trous de parcours, vos motivations, la question du salaire. Vous arrivez en ayant déjà répondu une fois.</p>
-        <p class="step-dur">En continu, avant chaque entretien réel.</p>
-      </div>
-    </article>
-
-    <article class="step">
-      <h3>Suivi jusqu'à la signature</h3>
-      <div>
-        <p>Nous restons disponibles pendant toute la recherche : débrief après chaque entretien, ajustement de la stratégie, relances, et appui au moment de la négociation. Vous n'avancez plus seul.</p>
-        <p class="step-dur">Jusqu'à la signature du contrat.</p>
-      </div>
-    </article>
-  </div>
-</section>
-
-<!-- ============ ORIENTATION ============ -->
-<section class="wrap" style="border-top:1px solid var(--rule)">
-  <h2>Et si le problème<br>n'était pas la recherche ?</h2>
-  <p class="lead">Certains candidats que nous accompagnons ne cherchent pas au mauvais endroit : ils cherchent dans le mauvais métier. Quand c'est le cas, nous le disons.</p>
-  <p class="lead">Nous proposons aussi un accompagnement à l'orientation : comprendre concrètement ce que recouvrent les métiers d'un secteur, identifier ceux qui correspondent à votre façon de fonctionner, et choisir une formation cohérente — y compris quand cela signifie changer de voie.</p>
-</section>
-
-<!-- ============ TEMOIGNAGES ============ -->
-<section class="wrap" style="background:var(--paper-2);max-width:none">
-  <div style="max-width:var(--maxw);margin:0 auto">
-    <h2>Ce qu'ils en disent.</h2>
-    <p class="lead">Nous pouvons vous mettre en relation directe avec d'anciens accompagnés avant que vous vous engagiez. Demandez-le, c'est normal.</p>
-
-    <div class="quotes">
-      <figure class="quote">
-        <p>« J'avais envoyé plus de cent candidatures sans aucune réponse. Le CV a été entièrement refait, et j'ai eu trois entretiens dans les deux semaines qui ont suivi. »</p>
-        <footer><b>Emplacement témoignage 1</b>École / domaine — contrat signé</footer>
-      </figure>
-      <figure class="quote">
-        <p>« Ce qui m'a le plus servi, c'est la préparation aux entretiens. J'ai arrêté d'improviser sur les questions que je redoutais. »</p>
-        <footer><b>Emplacement témoignage 2</b>École / domaine — contrat signé</footer>
-      </figure>
-      <figure class="quote">
-        <p>« Je pensais que mon profil était le problème. En fait c'était la façon dont je le présentais. »</p>
-        <footer><b>Emplacement témoignage 3</b>École / domaine — contrat signé</footer>
-      </figure>
-    </div>
-    <p style="margin-top:28px;font-size:15px;color:var(--ink-faint)">Témoignages à remplacer par vos retours réels, avec l'accord écrit de chaque personne.</p>
-  </div>
-</section>
-
-<!-- ============ EQUIPE ============ -->
-<section id="equipe" class="wrap">
-  <h2>Nous avons tous<br>galéré avant vous.</h2>
-  <p class="lead">Décroché n'a pas été créé par des consultants en carrière. Nous sommes quatre professionnels qui ont chacun raté, attendu, recommencé — et qui ont fini par comprendre comment le tri fonctionne réellement. Certains d'entre nous font aujourd'hui passer les entretiens de l'autre côté de la table.</p>
-
-  <div class="team">
-    <article class="member">
-      <div class="role">Fondateur</div>
-      <div class="from">Centrale Lyon</div>
-      <p class="bio">Deux ans d'expérience, aujourd'hui en freelance. Construit la méthode de reconstruction de CV et pilote l'accompagnement.</p>
-    </article>
-    <article class="member">
-      <div class="role">Ingénieur cybersécurité</div>
-      <div class="from">IMT Atlantique</div>
-      <p class="bio">Trois ans d'expérience. Prépare les entretiens techniques et les profils IT, réseaux et sécurité.</p>
-    </article>
-    <article class="member">
-      <div class="role">Chef de projet IT</div>
-      <div class="from">SKEMA</div>
-      <p class="bio">Cinq ans d'expérience. Intervient sur les profils gestion de projet, conseil et fonctions transverses.</p>
-    </article>
-    <article class="member">
-      <div class="role">Talent acquisition</div>
-      <div class="from">Sorbonne</div>
-      <p class="bio">En poste côté recrutement. Apporte la lecture réelle d'un recruteur sur les dossiers et les entretiens RH.</p>
-    </article>
-  </div>
-</section>
-
-<!-- ============ TARIFS ============ -->
-<section class="wrap">
-  <h2>Ce que ça coûte.</h2>
-  <div class="price">
-    <p style="font-size:18px">Nous n'encaissons rien sur ce site et rien avant de vous avoir parlé. Le montant se fixe lors du premier échange, en fonction de votre situation.</p>
-    <div class="price-rows">
-      <div class="price-row">
-        <h3>Le premier échange est gratuit</h3>
-        <p>Trente minutes pour comprendre où vous en êtes, regarder votre CV et vous dire honnêtement si nous pouvons vous aider. Si ce n'est pas le cas, nous vous le disons — et vous repartez quand même avec un retour utile.</p>
-      </div>
-      <div class="price-row">
-        <h3>Un montant adapté, échelonnable</h3>
-        <p>L'accompagnement complet représente une somme modeste au regard d'un contrat décroché — l'équivalent de quelques jours de salaire d'alternant. Le paiement peut être réparti en plusieurs fois, et rien n'est dû avant que nous ayons commencé à travailler.</p>
-      </div>
-    </div>
-    <p class="price-note">Pas d'abonnement, pas de reconduction automatique, pas de frais cachés. Les conditions exactes sont écrites et validées ensemble avant le démarrage.</p>
-  </div>
-</section>
-
-<!-- ============ FAQ ============ -->
-<section id="faq" class="wrap">
-  <h2>Les questions<br>qu'on nous pose.</h2>
-  <div class="faq">
-    <details>
-      <summary>Comment savoir que ce n'est pas une arnaque ?</summary>
-      <p>C'est la question la plus légitime, et nous préférons que vous la posiez. Nous sommes identifiables et déclarés, le premier échange est gratuit et sans engagement, les conditions sont écrites avant tout démarrage, et nous pouvons vous mettre en relation avec d'anciens accompagnés pour que vous ayez un retour direct, sans filtre.</p>
-    </details>
-    <details>
-      <summary>Et si je ne trouve pas de contrat ?</summary>
-      <p>Nous ne promettons pas un résultat, parce que personne ne peut le garantir honnêtement : le marché, votre profil et votre implication comptent autant que notre travail. Ce que nous garantissons, c'est la qualité et la régularité de l'accompagnement. Les conditions en cas d'absence de résultat sont discutées et écrites lors du premier échange.</p>
-    </details>
-    <details>
-      <summary>Vous accompagnez quels profils ?</summary>
-      <p>Tous les niveaux, du bac+2 au bac+5 et au-delà, et tous les domaines. Pour l'alternance, le stage, le CDD, le CDI et le démarrage en freelance. Si votre secteur sort de nos compétences, nous vous le disons dès le premier échange plutôt que de vous accompagner à moitié.</p>
-    </details>
-    <details>
-      <summary>Combien de temps dure l'accompagnement ?</summary>
-      <p>Trois à quatre semaines pour la partie structurante — reconstruction du CV, stratégie, préparation. Le suivi continue ensuite jusqu'à la signature de votre contrat, sans limite de durée fixée à l'avance.</p>
-    </details>
-    <details>
-      <summary>Vous écrivez le CV à ma place ?</summary>
-      <p>Nous reformulons et restructurons ce que vous avez réellement fait, pour que ce soit lisible par les logiciels de tri et compréhensible par un recruteur en quelques secondes. Nous n'inventons jamais une expérience, un diplôme ou une compétence : c'est votre parcours, mieux exprimé. C'est aussi ce qui vous permet de tenir en entretien.</p>
-    </details>
-    <details>
-      <summary>Vous postulez à ma place ?</summary>
-      <p>Non. Vous gardez la main sur chaque envoi. Nous préparons, vous décidez.</p>
-    </details>
-    <details>
-      <summary>Pourquoi seulement dix candidats par accompagnant ?</summary>
-      <p>Parce qu'au-delà, le suivi devient superficiel. Chacun d'entre nous suit dix personnes au maximum en parallèle, ce qui explique que les places ne soient pas toujours disponibles immédiatement.</p>
-    </details>
-    <details>
-      <summary>Que deviennent mes données ?</summary>
-      <p>Votre CV et vos informations servent uniquement à l'accompagnement. Ils ne sont ni vendus, ni transmis à des recruteurs, ni utilisés à d'autres fins. Vous pouvez demander leur suppression à tout moment.</p>
-    </details>
-  </div>
-</section>
-
-<!-- ============ CTA FINAL ============ -->
-<section class="final" id="rdv">
+<section class="band" id="histoires" aria-labelledby="t-hist">
   <div class="wrap">
-    <h2>Trente minutes pour savoir où vous en êtes.</h2>
-    <p>Envoyez-nous votre CV et vos disponibilités. Nous regardons votre dossier avant l'appel, et nous vous disons franchement si nous pouvons vous être utiles.</p>
-    <a href="#" class="btn" id="cta-final">Réserver un premier échange</a>
-    <div class="contact">
-      <span>Écrivez-nous : <a href="mailto:VOTRE-EMAIL">VOTRE-EMAIL</a></span>
-      <span>Téléphone : <a href="tel:VOTRE-NUMERO">VOTRE&nbsp;NUMÉRO</a></span>
-      <span>LinkedIn : <a href="VOTRE-LIEN-LINKEDIN">le profil de l'équipe</a></span>
+    <div class="stories-head">
+      <h2 id="t-hist">Ils ont signé.</h2>
+      <p class="lede">Touchez une carte pour voir leur parcours avec nous.</p>
+    </div>
+    <div class="rail">
+      <div class="flip"><button type="button" aria-pressed="false"><span class="visually-hidden">Retourner la carte du parcours 1. </span>
+<span class="face front"><span class="who"><span class="avatar">[Photo]</span><span><b>[Prénom]</b><small>[École]</small></span></span>
+<span class="g14"><span class="k">Avant Hors Filtre</span><span class="stat">[N] <small>candidatures</small></span><span class="stat">[N] <small>réponses</small></span></span>
+<span class="flip-hint">Voir la suite</span></span>
+<span class="face back"><span class="sign">Avec Hors Filtre</span>
+<span class="g12"><span class="stat">[N] <small>semaines</small></span><span class="stat">[N] <small>entretiens</small></span><span class="chip chip-ok">Signé chez [Entreprise]</span></span>
+<span class="sign">[Prénom], [École]</span></span>
+</button></div>
+<div class="flip"><button type="button" aria-pressed="false"><span class="visually-hidden">Retourner la carte du parcours 2. </span>
+<span class="face front"><span class="who"><span class="avatar">[Photo]</span><span><b>[Prénom]</b><small>[École]</small></span></span>
+<span class="g14"><span class="k">Avant Hors Filtre</span><span class="stat">[N] <small>candidatures</small></span><span class="stat">[N] <small>réponses</small></span></span>
+<span class="flip-hint">Voir la suite</span></span>
+<span class="face back"><span class="sign">Avec Hors Filtre</span>
+<span class="g12"><span class="stat">[N] <small>semaines</small></span><span class="stat">[N] <small>entretiens</small></span><span class="chip chip-ok">Signé chez [Entreprise]</span></span>
+<span class="sign">[Prénom], [École]</span></span>
+</button></div>
+<div class="flip"><button type="button" aria-pressed="false"><span class="visually-hidden">Retourner la carte du parcours 3. </span>
+<span class="face front"><span class="who"><span class="avatar">[Photo]</span><span><b>[Prénom]</b><small>[École]</small></span></span>
+<span class="g14"><span class="k">Avant Hors Filtre</span><span class="stat">[N] <small>candidatures</small></span><span class="stat">[N] <small>réponses</small></span></span>
+<span class="flip-hint">Voir la suite</span></span>
+<span class="face back"><span class="sign">Avec Hors Filtre</span>
+<span class="g12"><span class="stat">[N] <small>semaines</small></span><span class="stat">[N] <small>entretiens</small></span><span class="chip chip-ok">Signé chez [Entreprise]</span></span>
+<span class="sign">[Prénom], [École]</span></span>
+</button></div>
     </div>
   </div>
 </section>
 
-<footer class="site">
+<section class="band pt0" id="methode" aria-labelledby="t-meth">
+  <div class="wrap method-in">
+    <div class="method-copy">
+      <h2 id="t-meth">Trois à quatre semaines, jusqu’à la signature.</h2>
+      <ol class="steps">
+        <li><span><b>Votre CV, reconstruit</b><small>Semaine 1</small></span></li>
+        <li><span><b>Les bonnes entreprises, ciblées</b><small>Semaine 2</small></span></li>
+        <li><span><b>Chaque entretien, préparé</b><small>Semaines 2 à 4</small></span></li>
+        <li><span><b>À vos côtés jusqu’au contrat</b><small>Jusqu’à la signature</small></span></li>
+      </ol>
+    </div>
+    <div class="xr" id="xr" data-keywords="SEO|Google Analytics 4|Meta Ads|Emailing|CRM|Reporting|Calendrier éditorial|A/B test|Canva">
+      <div class="xr-head">
+        <p class="xr-kicker">Le même CV, en vue recruteur</p>
+        <div class="xr-toggle" role="group" aria-label="Version du CV affichée">
+          <button type="button" data-v="avant" aria-pressed="true">Avant</button>
+          <button type="button" data-v="apres" aria-pressed="false">Après</button>
+        </div>
+      </div>
+      <p class="xr-offer"><span>Offre visée</span> Alternance, chargé·e de marketing digital</p>
+      <div class="xr-stage">
+        <div class="xr-sheet" aria-hidden="true">
+          <div class="xr-scaler">
+            <article class="cvd cv-av" data-v="avant" data-poste="Introuvable" data-poste-ok="0" data-lecture="Non : 2 colonnes, icônes" data-lecture-ok="0" data-verdict="Il ne sort pas de la pile.">
+              <aside class="av-side" aria-label="Colonne latérale du CV d’exemple">
+                <div class="av-photo" data-hot data-o="6" data-x="Photo et icônes : ignorées au tri" data-ko><svg viewBox="0 0 80 80"><circle cx="40" cy="30" r="15"/><path d="M12 76c3-17 14-25 28-25s25 8 28 25z"/></svg></div>
+                <h4>Contact</h4>
+                <p><span class="av-ico">✆</span><span class="rd">06 ●● ●● ●● ●●</span></p>
+                <p><span class="av-ico">@</span><span class="rd">c●●●●●@mail.fr</span></p>
+                <p><span class="av-ico">in</span><span class="rd">/in/c●●●●●</span></p>
+                <h4>Compétences</h4>
+                <ul class="av-dots" data-hot data-o="5" data-x="Des notes en points : elles ne prouvent rien" data-ko>
+                  <li>Communication<i>●●●●○</i></li><li>Créativité<i>●●●●●</i></li><li>Photoshop<i>●●●○○</i></li><li>Excel<i>●●○○○</i></li>
+                </ul>
+                <h4>Langues</h4>
+                <p>Anglais <i class="av-stars">★★★☆☆</i></p>
+                <h4>Loisirs</h4>
+                <p>Voyages · Cuisine · Séries</p>
+              </aside>
+              <div class="av-main">
+                <p class="cv-name"><span class="rd-bar w64"></span></p>
+                <p class="av-title"><span class="x-ko" data-hot data-o="1" data-x="Poste visé : introuvable" data-ko>Étudiante motivée et dynamique</span></p>
+                <h4>Profil</h4>
+                <p class="x-ko" data-hot data-o="2" data-x="Phrase toute faite : elle ne dit rien de vous" data-ko>Passionnée par le marketing, je recherche une alternance afin de mettre à profit mes compétences et de continuer à apprendre au sein d’une entreprise dynamique.</p>
+                <h4>Expériences</h4>
+                <p class="cv-job"><b>Vendeuse</b> · Prêt-à-porter, Lyon · 2024</p>
+                <p><span class="x-ko" data-hot data-o="3" data-x="Des tâches, aucun résultat" data-ko>Conseil client, mise en rayon, encaissement</span>, <mark>reporting</mark> des ventes de la semaine.</p>
+                <p class="cv-job"><b>Stage marketing</b> · Agence, Lyon · 2023</p>
+                <p>Aide à la création de visuels sur <mark>Canva</mark>, participation aux réunions d’équipe, publication de posts.</p>
+                <h4>Formation</h4>
+                <p class="cv-job"><b>Bachelor Marketing</b> · [École] · en cours</p>
+                <p>Baccalauréat général · 2021</p>
+                <h4>Qualités</h4>
+                <p class="x-ko" data-hot data-o="4" data-x="Des adjectifs, aucune preuve" data-ko>Rigoureuse, curieuse, autonome, dotée d’un excellent relationnel et d’une grande capacité d’adaptation.</p>
+                <h4>Autres expériences</h4>
+                <p class="cv-job"><b>Animatrice</b> · Centre de loisirs · été 2022</p>
+                <p>Encadrement d’enfants, organisation d’activités.</p>
+                <p class="cv-job"><b>Baby-sitting</b> · 2019-2022</p>
+                <p>Garde d’enfants, aide aux devoirs.</p>
+                <p class="av-ref">Références disponibles sur demande.</p>
+              </div>
+            </article>
+            <article class="cvd cv-ap" data-v="apres" data-poste="Celui de l’offre" data-poste-ok="1" data-lecture="Oui : 1 colonne, titres clairs" data-lecture-ok="1" data-verdict="Il sort de la pile.">
+              <header class="ap-head">
+                <p class="cv-name"><span class="rd-bar w44"></span></p>
+                <p class="ap-title"><span class="x-ok" data-hot data-o="1" data-x="Poste visé : celui de l’offre" data-ok>Alternance · Chargée de marketing digital</span></p>
+                <p class="ap-meta">12 mois dès septembre 2026 · Lyon · <span class="rd">06 ●● ●● ●● ●●</span> · <span class="rd">c●●●●●@mail.fr</span></p>
+              </header>
+              <p class="ap-sum">Bachelor 3 en marketing digital. Deux expériences de terrain, des résultats mesurés en <mark>SEO</mark> et en <mark>emailing</mark>.</p>
+              <h4 data-hot data-o="2" data-x="Une colonne, des titres standards : lu en 7 secondes" data-ok>Expériences</h4>
+              <p class="cv-job"><b>Assistante marketing digital</b> · stage de 4 mois · Agence de communication, Lyon · 2025</p>
+              <ul>
+                <li><mark>Calendrier éditorial</mark> de 3 marques : 60 visuels par mois sur <mark>Canva</mark></li>
+                <li>Campagnes <mark>Meta Ads</mark> : <span class="x-num" data-hot data-o="3" data-x="Un résultat chiffré, vérifiable" data-ok>coût par clic −32 %</span> en 6 semaines</li>
+                <li><mark>Reporting</mark> hebdomadaire sous <mark>Google Analytics 4</mark></li>
+              </ul>
+              <p class="cv-job"><b>Conseillère de vente</b> · Prêt-à-porter, Lyon · 2024</p>
+              <ul>
+                <li>Fichier clients sous <mark>CRM</mark> : <span class="x-num">+240 contacts</span>, relancés par emailing</li>
+                <li>Objectif de vente atteint <span class="x-num">5 mois sur 6</span></li>
+              </ul>
+              <p class="cv-job"><b>Projet</b> · Site d’une association étudiante</p>
+              <ul><li><mark>SEO</mark> local : <span class="x-num">+48 % de visites</span> en 3 mois ; <mark>A/B test</mark> de la newsletter : <span class="x-num">+11 points</span> d’ouverture</li></ul>
+              <h4>Compétences</h4>
+              <p class="ap-skills" data-hot data-o="4" data-x="9 mots-clés de l’offre sur 9" data-ok><mark>SEO</mark> · <mark>Google Analytics 4</mark> · <mark>Meta Ads</mark> · <mark>Emailing</mark> (Brevo) · <mark>CRM</mark> (HubSpot) · <mark>Canva</mark> · <mark>A/B test</mark> · <mark>Reporting</mark> · <mark>Calendrier éditorial</mark></p>
+              <h4>Engagement</h4>
+              <p class="cv-job"><b>Trésorière du BDE</b> · [École] · 2024-2025</p>
+              <ul><li>Budget de <span class="x-num">12 000 €</span> suivi sur l’année, <span class="x-num">6 événements</span> organisés</li></ul>
+              <h4>Formation</h4>
+              <p class="cv-job"><b>Bachelor Marketing digital</b> · [École] · 2023-2026</p>
+              <h4>Langues</h4>
+              <p>Anglais B2 (TOEIC 845) · Espagnol B1</p>
+            </article>
+          </div>
+          <span class="xr-scan"></span>
+          <span class="xr-lens"><span class="xr-lens-label">Vue recruteur</span></span>
+          <span class="xr-tag"></span>
+          <span class="xr-badge">CV d’exemple</span>
+        </div>
+      </div>
+      <p class="xr-help"><span class="xr-help-touch">Touchez le CV</span><span class="xr-help-mouse">Survolez le CV</span> : la loupe montre ce qu’en retient un recruteur pressé.</p>
+      <dl class="xr-hud" aria-live="polite">
+        <div class="xr-tile" data-k="poste"><dt>Poste visé</dt><dd class="is-ko">Introuvable</dd></div>
+        <div class="xr-tile" data-k="mots"><dt>Mots-clés de l’offre</dt><dd><span class="xr-num">2</span><small> / 9</small><i class="xr-bar"><i></i></i></dd></div>
+        <div class="xr-tile" data-k="res"><dt>Résultats chiffrés</dt><dd><span class="xr-num">0</span></dd></div>
+        <div class="xr-tile" data-k="lec"><dt>Lisible en 7 secondes</dt><dd class="is-ko">Non : 2 colonnes, icônes</dd></div>
+        <div class="xr-verdict"><span class="xr-cube" aria-hidden="true"></span><dt class="visually-hidden">Verdict</dt><dd class="xr-vtext">Il ne sort pas de la pile.</dd></div>
+      </dl>
+      <p class="visually-hidden">Comparaison d’un CV d’exemple. Avant : poste visé introuvable, 2 mots-clés de l’offre sur 9, aucun résultat chiffré, mise en page sur 2 colonnes. Après : poste visé identique à l’offre, 9 mots-clés sur 9, 7 résultats chiffrés, une seule colonne avec des titres standards.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band price" id="tarifs" aria-labelledby="t-prix">
+  <div class="wrap price-in">
+    <div class="g22-start">
+      <h2 id="t-prix">L’essentiel, seulement si vous signez.</h2>
+      <p class="lede">50 € de mise en route à la remise de votre CV. Le reste, uniquement si vous décrochez votre contrat.</p>
+      <a class="parent-link" href="#tarifs">Vous êtes parent ? Ce qu’il faut savoir</a>
+    </div>
+    <div class="sim">
+      <div class="sim-field">
+        <span class="sim-top"><label for="salaire">Votre premier salaire brut mensuel</label><output id="sal-out" for="salaire">1 200 €</output></span>
+        <input type="range" id="salaire" min="600" max="3500" step="50" value="1200">
+      </div>
+      <dl class="sim-out" aria-live="polite">
+        <div><dt>Au total</dt><dd id="o-total">180 €</dd></div>
+        <div><dt>Mise en route</dt><dd>50 €</dd></div>
+        <div><dt>À la signature</dt><dd class="now" id="o-reste">130 €</dd></div>
+      </dl>
+      <p>15 % du premier salaire, plafonné à 350 €. Sans contrat dans le mois et demi : rien de plus que la mise en route.</p>
+    </div>
+  </div>
+</section>
+
+<section class="band" aria-labelledby="t-eng">
+  <div class="wrap promise-in">
+    <h2 id="t-eng">Nos engagements, écrits noir sur blanc.</h2>
+    <ul class="promises">
+      <li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span><b>Le premier échange est gratuit</b><span>Trente minutes, sans engagement.</span></span></li>
+<li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span><b>Le prix est écrit avant de commencer</b><span>Vous savez ce que vous paierez, et quand.</span></span></li>
+<li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span><b>Pas de contrat, rien de plus à payer</b><span>Au-delà des 50 € de mise en route.</span></span></li>
+<li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span><b>Vos données vous appartiennent</b><span>Supprimées douze mois après la fin, ou dès que vous le demandez.</span></span></li>
+<li><span class="tick" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B6B45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5L20 7"/></svg></span><span><b>Une entreprise déclarée</b><span>SIRET [numéro], joignable par e-mail et sur WhatsApp.</span></span></li>
+    </ul>
+  </div>
+</section>
+
+<section class="test" id="test" aria-labelledby="t-test">
   <div class="wrap">
-    <span>Décroché — accompagnement à la recherche d'emploi et d'alternance</span>
-    <span>
-      <a href="/mentions-legales.html">Mentions légales</a> ·
-      <a href="/cgv.html">Conditions générales</a> ·
-      <a href="/confidentialite.html">Confidentialité</a>
-    </span>
+    <div class="test-box">
+      <div><h2 id="t-test">Votre CV <span class="nowrap">passe-t-il</span> le filtre ?</h2><p>Huit questions, deux minutes, votre score tout de suite.</p></div>
+      <a class="btn btn-primary" href="#test">Faire le test</a>
+    </div>
+  </div>
+</section>
+
+<section class="band backstage" id="reserver" aria-labelledby="t-coul">
+  <div class="wrap backstage-in">
+    <div class="backstage-copy">
+      <h2 id="t-coul">Accompagné, vous entrez dans les Coulisses.</h2>
+      <p class="lede">Vos candidatures, vos documents et votre accompagnant, réunis dans un seul espace.</p>
+      <a class="btn btn-primary" href="#reserver">Réserver un échange gratuit</a>
+    </div>
+    <div class="phone" role="img" aria-label="Aperçu des Coulisses : le suivi de vos candidatures">
+      <span class="notch" aria-hidden="true"></span>
+      <div class="app-row" aria-hidden="true"><b>[Entreprise]</b><small>Alternance développeur web</small><span class="chip chip-info">Entretien technique planifié</span></div>
+      <div class="app-row" aria-hidden="true"><b>[Entreprise]</b><small>Alternance data analyst</small><span class="chip chip-prog">Proposition reçue</span></div>
+      <div class="app-row" aria-hidden="true"><b>[Entreprise]</b><small>Stage chef de projet</small><span class="chip chip-ok">Signée</span></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-in">
+    <span>© 2026 Hors Filtre — SIRET [numéro] — <a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a></span>
+    <ul><li><a href="#">Mentions légales</a></li><li><a href="#">Conditions générales</a></li><li><a href="#">Confidentialité</a></li></ul>
   </div>
 </footer>
 
-<script>
-/* nav border on scroll */
-const nav=document.getElementById('nav');
-addEventListener('scroll',()=>nav.classList.toggle('stuck',scrollY>10),{passive:true});
+<aside aria-label="Contact rapide"><a class="wa" href="#"><i aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#121530" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-13.4 7.9L3 21l1.2-4.4A9 9 0 1 1 21 12z"/></svg></i><span class="wa-text">Une question ?</span><span class="visually-hidden"> Écrivez-nous sur WhatsApp</span></a></aside>
 
-/* compteurs animés — une seule fois, à l'entrée du bandeau */
-const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-const counters=document.querySelectorAll('[data-count]');
-const setVal=(el,v)=>el.textContent=v+(el.dataset.suffix||'');
-if(reduce){counters.forEach(el=>setVal(el,el.dataset.count));}
-else{
-  const io=new IntersectionObserver(entries=>{
-    entries.forEach(e=>{
-      if(!e.isIntersecting)return;
-      const el=e.target,target=+el.dataset.count,dur=1100,t0=performance.now();
-      const tick=t=>{
-        const p=Math.min((t-t0)/dur,1);
-        setVal(el,Math.round(target*(1-Math.pow(1-p,3))));
-        if(p<1)requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-      io.unobserve(el);
-    });
-  },{threshold:.5});
-  counters.forEach(el=>io.observe(el));
-}
-
-/* démo du filtre ATS */
-const scanner=document.getElementById('scanner'),
-      doc=document.getElementById('doc'),
-      verdict=document.getElementById('verdict'),
-      state=document.getElementById('scan-state'),
-      bFail=document.getElementById('btn-fail'),
-      bPass=document.getElementById('btn-pass');
-let busy=false;
-
-function run(mode){
-  if(busy)return; busy=true;
-  bFail.setAttribute('aria-pressed',mode==='fail');
-  bPass.setAttribute('aria-pressed',mode==='pass');
-  doc.className='doc'; verdict.className='verdict'; verdict.textContent='';
-  state.textContent='analyse en cours';
-  if(reduce){finish(mode);return;}
-  scanner.classList.remove('scanning'); void scanner.offsetWidth;
-  scanner.classList.add('scanning');
-  setTimeout(()=>finish(mode),1700);
-}
-function finish(mode){
-  scanner.classList.remove('scanning');
-  doc.classList.add(mode);
-  verdict.classList.add(mode);
-  if(mode==='fail'){
-    verdict.textContent='Document mal interprété — candidature écartée avant lecture humaine.';
-    state.textContent='rejeté';
-  }else{
-    verdict.textContent='Document correctement lu — la candidature part chez le recruteur.';
-    state.textContent='transmis';
-  }
-  busy=false;
-}
-bFail.addEventListener('click',()=>run('fail'));
-bPass.addEventListener('click',()=>run('pass'));
-
-/* première visite de la section : on montre le rejet, puis on laisse la main */
-new IntersectionObserver((entries,obs)=>{
-  entries.forEach(e=>{
-    if(!e.isIntersecting)return;
-    setTimeout(()=>run('fail'),350);
-    obs.disconnect();
-  });
-},{threshold:.45}).observe(scanner);
-</script>
+<script src="/app.js" defer></script>
 </body>
 </html>

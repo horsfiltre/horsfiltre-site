@@ -60,3 +60,13 @@ Aucune modification directe sur `main`. Rien n'est publié si un contrôle écho
 ## Configuration initiale
 
 Voir [docs/CONFIGURATION.md](docs/CONFIGURATION.md).
+
+## Contraintes à respecter dans toute modification
+
+La politique de sécurité du contenu (voir `public/_headers`) interdit tout code intégré :
+
+- pas de balise `<style>` ni d'attribut `style=` dans le HTML — utiliser une classe dans `public/styles.css` ;
+- pas de `<script>` intégré ni d'attribut `onclick` — tout passe par `public/app.js` et `addEventListener` ;
+- pas de ressource chargée depuis un domaine tiers : polices, images et scripts sont servis depuis le site.
+
+Voir `docs/adr/0003-page-accueil-externalisation-csp-stricte.md`.

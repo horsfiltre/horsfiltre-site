@@ -1,0 +1,15 @@
+{
+  "name": "Hors Filtre",
+  "short_name": "Hors Filtre",
+  "description": "Accompagnement à la recherche d’alternance, de stage et de premier emploi.",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
