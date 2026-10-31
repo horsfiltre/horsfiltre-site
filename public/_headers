@@ -1,18 +1,23 @@
 # En-têtes appliqués par Cloudflare Pages à chaque réponse.
 # Référence : chapitre 9 du document d'architecture.
 #
-# 'unsafe-inline' est toléré temporairement : la page actuelle contient
-# du CSS et du JavaScript intégrés. À retirer dès que le code sera
-# externalisé dans des fichiers séparés.
-# Google Fonts : à remplacer par des polices auto-hébergées (RGPD).
+# Depuis la refonte, le CSS et le JavaScript sont dans des fichiers séparés
+# et les polices sont hébergées ici : 'unsafe-inline' a été retiré, et plus
+# aucune requête ne part vers Google (conformité RGPD).
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/site.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
 
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
