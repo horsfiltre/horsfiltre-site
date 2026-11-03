@@ -10,7 +10,8 @@
     "lint:html": "html-validate \"public/**/*.html\"",
     "lighthouse": "node scripts/lighthouse.mjs",
     "dev": "wrangler pages dev public",
-    "check": "npm run lint:html"
+    "check": "npm run lint:html && npm test",
+    "test": "node --test \"shared/test/*.test.mts\""
   },
   "devDependencies": {
     "chrome-launcher": "1.2.2",
