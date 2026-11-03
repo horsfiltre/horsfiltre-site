@@ -8,6 +8,7 @@
 // Modèle de données : docs/api/modele-de-donnees.md.
 import { DynamoDBClient, type DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
 import {
+  DeleteCommand,
   DynamoDBDocumentClient,
   GetCommand,
   PutCommand,
@@ -15,7 +16,7 @@ import {
   TransactWriteCommand,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
-import type { Creneau, Reservation, Stockage, StatutCreneau } from '../../shared/src/index.mts';
+import type { Absence, Accompagnant, Creneau, Regle, Reservation, Stockage, StatutCreneau } from '../../shared/src/index.mts';
 import { ErreurMetier } from '../../shared/src/index.mts';
 
 /**
@@ -28,6 +29,8 @@ export function creerClientDocument(config: DynamoDBClientConfig = {}): DynamoDB
 
 /** [À VALIDER] Les réservations sont supprimées automatiquement 12 mois après la date de l'échange. */
 export const CONSERVATION_JOURS = 365;
+/** Les créneaux passés sont supprimés automatiquement 30 jours après leur début. */
+export const CONSERVATION_CRENEAUX_JOURS = 30;
 
 type Cle = { PK: string; SK: string };
 type Element = Record<string, unknown>;
@@ -52,6 +55,7 @@ function creneauVersElement(c: Creneau): Element {
     GSI2PK: `CRENEAUX#${c.statut}`,
     GSI2SK: c.debut,
     GSI5PK: `CRENEAU#${c.id}`,
+    expireLe: Math.floor(Date.parse(c.debut) / 1000) + CONSERVATION_CRENEAUX_JOURS * 86_400,
   };
 }
 
@@ -100,6 +104,25 @@ function elementVersReservation(e: Element): Reservation {
     creeLe: e.creeLe as string,
   };
 }
+
+const cleAccompagnant = (id: string): Cle => ({ PK: `ACCOMP#${id}`, SK: 'PROFIL' });
+
+function elementVersAccompagnant(e: Element): Accompagnant {
+  return { id: e.id as string, prenom: e.prenom as string, lienVisio: e.lienVisio as string, actif: e.actif === true };
+}
+
+function elementVersRegle(e: Element): Regle {
+  return {
+    id: e.id as string, accompagnantId: e.accompagnantId as string, jour: e.jour as Regle['jour'],
+    debut: e.debut as string, fin: e.fin as string, valideDu: e.valideDu as string, valideAu: (e.valideAu as string | undefined) ?? null,
+  };
+}
+
+function elementVersAbsence(e: Element): Absence {
+  return { id: e.id as string, accompagnantId: e.accompagnantId as string, du: e.du as string, au: e.au as string, motif: (e.motif as string | undefined) ?? null };
+}
+
+const meme = (a: Cle, b: Cle): boolean => a.PK === b.PK && a.SK === b.SK;
 
 const nomErreur = (e: unknown): string => (e instanceof Error ? e.name : '');
 
@@ -378,5 +401,147 @@ export class StockageDynamoDB implements Stockage {
       throw e;
     }
     return miseAJour;
+  }
+
+  // ------------------------------------------------------------------------------ administration
+
+  /** Retrouve les clés d'une règle ou d'une absence à partir de son identifiant public. */
+  async #cleParIdentifiantPublic(genre: 'REGLE' | 'ABSENCE', id: string): Promise<Cle | undefined> {
+    const r = await this.#doc.send(new QueryCommand({
+      TableName: this.#table, IndexName: 'GSI5', KeyConditionExpression: 'GSI5PK = :p',
+      ExpressionAttributeValues: { ':p': `${genre}#${id}` }, Limit: 1,
+    }));
+    const e = r.Items?.[0];
+    return e ? { PK: e.PK as string, SK: e.SK as string } : undefined;
+  }
+
+  async #lister(partition: string, prefixe: string): Promise<Element[]> {
+    const resultat: Element[] = [];
+    let suite: Record<string, unknown> | undefined;
+    do {
+      const r = await this.#doc.send(new QueryCommand({
+        TableName: this.#table, KeyConditionExpression: 'PK = :p AND begins_with(SK, :s)',
+        ExpressionAttributeValues: { ':p': partition, ':s': prefixe }, ConsistentRead: true, ExclusiveStartKey: suite,
+      }));
+      resultat.push(...(r.Items ?? []));
+      suite = r.LastEvaluatedKey;
+    } while (suite);
+    return resultat;
+  }
+
+  async listerAccompagnants(): Promise<Accompagnant[]> {
+    const resultat: Accompagnant[] = [];
+    let suite: Record<string, unknown> | undefined;
+    do {
+      const r = await this.#doc.send(new QueryCommand({
+        TableName: this.#table, IndexName: 'GSI2', KeyConditionExpression: 'GSI2PK = :p',
+        ExpressionAttributeValues: { ':p': 'ACCOMPAGNANTS' }, ExclusiveStartKey: suite,
+      }));
+      for (const e of r.Items ?? []) resultat.push(elementVersAccompagnant(e));
+      suite = r.LastEvaluatedKey;
+    } while (suite);
+    return resultat.sort((a, b) => a.id.localeCompare(b.id));
+  }
+
+  async lireAccompagnant(id: string): Promise<Accompagnant | undefined> {
+    const r = await this.#doc.send(new GetCommand({ TableName: this.#table, Key: cleAccompagnant(id), ConsistentRead: true }));
+    return r.Item ? elementVersAccompagnant(r.Item) : undefined;
+  }
+
+  async ecrireAccompagnant(a: Accompagnant): Promise<void> {
+    await this.#doc.send(new PutCommand({
+      TableName: this.#table,
+      Item: { ...cleAccompagnant(a.id), entite: 'accompagnant', id: a.id, prenom: a.prenom, lienVisio: a.lienVisio, actif: a.actif, GSI2PK: 'ACCOMPAGNANTS', GSI2SK: a.id },
+    }));
+  }
+
+  async listerRegles(accompagnantId: string): Promise<Regle[]> {
+    return (await this.#lister(`ACCOMP#${accompagnantId}`, 'REGLE#')).map(elementVersRegle);
+  }
+
+  async lireRegle(id: string): Promise<Regle | undefined> {
+    const cle = await this.#cleParIdentifiantPublic('REGLE', id);
+    if (!cle) return undefined;
+    const r = await this.#doc.send(new GetCommand({ TableName: this.#table, Key: cle, ConsistentRead: true }));
+    return r.Item ? elementVersRegle(r.Item) : undefined;
+  }
+
+  async ecrireRegle(r: Regle): Promise<void> {
+    const cle: Cle = { PK: `ACCOMP#${r.accompagnantId}`, SK: `REGLE#${r.id}` };
+    const existante = await this.#cleParIdentifiantPublic('REGLE', r.id);
+    if (existante && !meme(existante, cle)) throw new Error(`La règle ${r.id} existe déjà pour un autre accompagnant`);
+    await this.#doc.send(new PutCommand({
+      TableName: this.#table,
+      Item: { ...cle, entite: 'regle', id: r.id, accompagnantId: r.accompagnantId, jour: r.jour, debut: r.debut, fin: r.fin, valideDu: r.valideDu, valideAu: r.valideAu ?? undefined, GSI5PK: `REGLE#${r.id}` },
+    }));
+  }
+
+  async supprimerRegle(id: string): Promise<boolean> {
+    const cle = await this.#cleParIdentifiantPublic('REGLE', id);
+    if (!cle) return false;
+    await this.#doc.send(new DeleteCommand({ TableName: this.#table, Key: cle }));
+    return true;
+  }
+
+  async listerAbsences(accompagnantId: string): Promise<Absence[]> {
+    return (await this.#lister(`ACCOMP#${accompagnantId}`, 'ABSENCE#')).map(elementVersAbsence);
+  }
+
+  async lireAbsence(id: string): Promise<Absence | undefined> {
+    const cle = await this.#cleParIdentifiantPublic('ABSENCE', id);
+    if (!cle) return undefined;
+    const r = await this.#doc.send(new GetCommand({ TableName: this.#table, Key: cle, ConsistentRead: true }));
+    return r.Item ? elementVersAbsence(r.Item) : undefined;
+  }
+
+  async ecrireAbsence(a: Absence): Promise<void> {
+    const cle: Cle = { PK: `ACCOMP#${a.accompagnantId}`, SK: `ABSENCE#${a.du}#${a.id}` };
+    const existante = await this.#cleParIdentifiantPublic('ABSENCE', a.id);
+    if (existante && !meme(existante, cle)) throw new Error(`L'absence ${a.id} existe déjà avec d'autres dates ou un autre accompagnant`);
+    await this.#doc.send(new PutCommand({
+      TableName: this.#table,
+      Item: { ...cle, entite: 'absence', id: a.id, accompagnantId: a.accompagnantId, du: a.du, au: a.au, motif: a.motif ?? undefined, GSI5PK: `ABSENCE#${a.id}` },
+    }));
+  }
+
+  async supprimerAbsence(id: string): Promise<boolean> {
+    const cle = await this.#cleParIdentifiantPublic('ABSENCE', id);
+    if (!cle) return false;
+    await this.#doc.send(new DeleteCommand({ TableName: this.#table, Key: cle }));
+    return true;
+  }
+
+  async supprimerCreneau(id: string): Promise<'supprime' | 'absent' | 'reserve'> {
+    const cle = await this.#cleParIdentifiant(id);
+    if (!cle) return 'absent';
+    try {
+      await this.#doc.send(new DeleteCommand({
+        TableName: this.#table, Key: cle,
+        // Atomique : un créneau réservé entre la lecture et la suppression n'est jamais supprimé.
+        ConditionExpression: 'attribute_exists(PK) AND #s <> :reserve',
+        ExpressionAttributeNames: { '#s': 'statut' }, ExpressionAttributeValues: { ':reserve': 'reserve' },
+      }));
+      return 'supprime';
+    } catch (e) {
+      if (nomErreur(e) !== 'ConditionalCheckFailedException') throw e;
+      const encore = await this.#doc.send(new GetCommand({ TableName: this.#table, Key: cle, ConsistentRead: true }));
+      return encore.Item ? 'reserve' : 'absent';
+    }
+  }
+
+  async listerReservations(depuis: string, jusqua: string): Promise<Reservation[]> {
+    const resultat: Reservation[] = [];
+    for (const statut of ['confirmee', 'annulee'] as const) {
+      let suite: Record<string, unknown> | undefined;
+      do {
+        const r = await this.#doc.send(new QueryCommand({
+          TableName: this.#table, IndexName: 'GSI2', KeyConditionExpression: 'GSI2PK = :p AND GSI2SK BETWEEN :a AND :b',
+          ExpressionAttributeValues: { ':p': `RESERVATIONS#${statut}`, ':a': depuis, ':b': jusqua }, ExclusiveStartKey: suite,
+        }));
+        for (const e of r.Items ?? []) resultat.push(elementVersReservation(e));
+        suite = r.LastEvaluatedKey;
+      } while (suite);
+    }
+    return resultat.sort((a, b) => a.debut.localeCompare(b.debut) || a.id.localeCompare(b.id));
   }
 }

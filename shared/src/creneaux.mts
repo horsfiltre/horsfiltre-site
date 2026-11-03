@@ -29,6 +29,8 @@ export type Absence = {
   /** Instants ISO 8601. */
   du: string;
   au: string;
+  /** Texte libre de l'équipe, jamais montré aux visiteurs. */
+  motif?: string | null;
 };
 
 export type StatutCreneau = 'libre' | 'reserve' | 'ferme';

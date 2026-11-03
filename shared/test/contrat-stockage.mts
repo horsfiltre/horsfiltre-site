@@ -6,14 +6,14 @@ import assert from 'node:assert/strict';
 import { identifiantCreneau, nouvelIdentifiant } from '../src/identifiants.mts';
 import { empreinteEmail } from '../src/reservation.mts';
 import { ErreurMetier, type Reservation, type Stockage } from '../src/stockage.mts';
-import type { Creneau } from '../src/creneaux.mts';
+import type { Absence, Creneau, Regle } from '../src/creneaux.mts';
 
 export type Fabrique = {
   nom: string;
   /** Un stockage neuf, ou partagé : chaque test utilise son propre accompagnant, donc ne gêne pas les autres. */
   creer: () => Promise<Stockage>;
   /** Retire ce que le test a écrit, pour les bases qui persistent. */
-  nettoyer?: (creneaux: Creneau[], reservations: Reservation[]) => Promise<void>;
+  nettoyer?: (creneaux: Creneau[], reservations: Reservation[], accompagnants: string[]) => Promise<void>;
 };
 
 const code = async (p: Promise<unknown>): Promise<string> => {
@@ -52,7 +52,7 @@ export function definirContrat(fabrique: Fabrique): void {
       reservations.push(r);
       return r;
     };
-    const fin = async () => { if (nettoyer) await nettoyer(creneaux, reservations); };
+    const fin = async () => { if (nettoyer) await nettoyer(creneaux, reservations, [acc]); };
     return { stockage, acc, creneaux, reservation, fin };
   }
 
@@ -212,6 +212,99 @@ export function definirContrat(fabrique: Fabrique): void {
       await stockage.changerStatutCreneau(creneaux[1]!.id, 'ferme');
       const liste = (await stockage.listerCreneaux(creneaux[0]!.debut, creneaux[2]!.debut)).filter((c) => c.accompagnantId === creneaux[0]!.accompagnantId);
       assert.deepEqual(liste.map((c) => c.statut), ['reserve', 'ferme', 'libre']);
+    } finally { await fin(); }
+  });
+
+  // ------------------------------------------------------------------------------ administration
+
+  const regle = (acc: string, extra: Partial<Regle> = {}): Regle => ({
+    id: nouvelIdentifiant(), accompagnantId: acc, jour: 'mardi', debut: '18:00', fin: '21:00', valideDu: '2030-01-01', valideAu: null, ...extra,
+  });
+  const absence = (acc: string, extra: Partial<Absence> = {}): Absence => ({
+    id: nouvelIdentifiant(), accompagnantId: acc, du: '2030-03-01T00:00:00.000Z', au: '2030-03-05T00:00:00.000Z', motif: null, ...extra,
+  });
+
+  dans('accompagnants : écrire, lire, lister, remplacer', async () => {
+    const { stockage, acc, fin } = await decor(1);
+    try {
+      assert.equal(await stockage.lireAccompagnant(acc), undefined);
+      const a = { id: acc, prenom: 'Ilyas', lienVisio: 'https://meet.google.com/aaa-bbbb-ccc', actif: true };
+      await stockage.ecrireAccompagnant(a);
+      assert.deepEqual(await stockage.lireAccompagnant(acc), a);
+      assert.deepEqual((await stockage.listerAccompagnants()).filter((x) => x.id === acc), [a]);
+      await stockage.ecrireAccompagnant({ ...a, prenom: 'Ilyas L.', actif: false });
+      assert.deepEqual(await stockage.lireAccompagnant(acc), { ...a, prenom: 'Ilyas L.', actif: false });
+      assert.equal((await stockage.listerAccompagnants()).filter((x) => x.id === acc).length, 1); // remplacé, pas dupliqué
+    } finally { await fin(); }
+  });
+
+  dans('règles : écrire, lister, lire, remplacer, supprimer', async () => {
+    const { stockage, acc, fin } = await decor(1);
+    try {
+      const r1 = regle(acc);
+      const r2 = regle(acc, { jour: 'jeudi', debut: '10:00', fin: '12:00', valideAu: '2030-12-31' });
+      await stockage.ecrireRegle(r1);
+      await stockage.ecrireRegle(r2);
+      assert.deepEqual((await stockage.listerRegles(acc)).map((r) => r.id).sort(), [r1.id, r2.id].sort());
+      assert.deepEqual(await stockage.lireRegle(r1.id), r1); // valideAu reste « null »
+      assert.deepEqual(await stockage.lireRegle(r2.id), r2);
+      assert.equal(await stockage.lireRegle(nouvelIdentifiant()), undefined);
+      await stockage.ecrireRegle({ ...r1, debut: '17:00' });
+      assert.equal((await stockage.lireRegle(r1.id))!.debut, '17:00');
+      assert.equal((await stockage.listerRegles(acc)).length, 2); // remplacée, pas dupliquée
+      assert.equal(await stockage.supprimerRegle(r1.id), true);
+      assert.equal(await stockage.lireRegle(r1.id), undefined);
+      assert.equal(await stockage.supprimerRegle(r1.id), false);
+      assert.equal(await stockage.supprimerRegle(nouvelIdentifiant()), false);
+      assert.equal((await stockage.listerRegles(acc)).length, 1);
+    } finally { await fin(); }
+  });
+
+  dans('absences : écrire, lister par date, lire, supprimer', async () => {
+    const { stockage, acc, fin } = await decor(1);
+    try {
+      const tard = absence(acc, { du: '2030-06-01T00:00:00.000Z', au: '2030-06-02T00:00:00.000Z' });
+      const tot = absence(acc, { motif: 'Vacances' });
+      await stockage.ecrireAbsence(tard);
+      await stockage.ecrireAbsence(tot);
+      assert.deepEqual(await stockage.listerAbsences(acc), [tot, tard]); // par date de début
+      assert.deepEqual(await stockage.lireAbsence(tot.id), tot);
+      assert.equal(await stockage.lireAbsence(nouvelIdentifiant()), undefined);
+      assert.equal(await stockage.supprimerAbsence(tot.id), true);
+      assert.equal(await stockage.supprimerAbsence(tot.id), false);
+      assert.deepEqual(await stockage.listerAbsences(acc), [tard]);
+    } finally { await fin(); }
+  });
+
+  dans('supprimer un créneau : libre et fermé oui, réservé jamais, inconnu est « absent »', async () => {
+    const { stockage, creneaux, reservation, fin } = await decor(4);
+    try {
+      await stockage.reserver(creneaux[2]!.id, reservation(creneaux[2]!));
+      await stockage.changerStatutCreneau(creneaux[1]!.id, 'ferme');
+      assert.equal(await stockage.supprimerCreneau(creneaux[0]!.id), 'supprime');
+      assert.equal(await stockage.supprimerCreneau(creneaux[1]!.id), 'supprime');
+      assert.equal(await stockage.supprimerCreneau(creneaux[2]!.id), 'reserve');
+      assert.equal(await stockage.supprimerCreneau('0'.repeat(26)), 'absent');
+      assert.equal(await stockage.supprimerCreneau(creneaux[0]!.id), 'absent'); // déjà supprimé
+      assert.equal(await stockage.lireCreneau(creneaux[0]!.id), undefined);
+      assert.equal((await stockage.lireCreneau(creneaux[2]!.id))!.statut, 'reserve');
+      const restants = (await stockage.listerCreneaux(creneaux[0]!.debut, creneaux[3]!.debut)).filter((c) => c.accompagnantId === creneaux[0]!.accompagnantId);
+      assert.deepEqual(restants.map((c) => c.id), [creneaux[2]!.id, creneaux[3]!.id]);
+    } finally { await fin(); }
+  });
+
+  dans('lister les réservations : confirmées et annulées, par période de début', async () => {
+    const { stockage, acc, creneaux, reservation, fin } = await decor(3);
+    try {
+      const r0 = reservation(creneaux[0]!, 'a@exemple.fr');
+      const r1 = reservation(creneaux[1]!, 'b@exemple.fr');
+      await stockage.reserver(creneaux[0]!.id, r0);
+      await stockage.reserver(creneaux[1]!.id, r1);
+      await stockage.annuler(r1.id);
+      const tout = (await stockage.listerReservations(creneaux[0]!.debut, creneaux[2]!.debut)).filter((r) => r.accompagnantId === acc);
+      assert.deepEqual(tout.map((r) => [r.id, r.statut]), [[r0.id, 'confirmee'], [r1.id, 'annulee']]);
+      const apres = (await stockage.listerReservations(creneaux[1]!.debut, creneaux[2]!.debut)).filter((r) => r.accompagnantId === acc);
+      assert.deepEqual(apres.map((r) => r.id), [r1.id]);
     } finally { await fin(); }
   });
 }

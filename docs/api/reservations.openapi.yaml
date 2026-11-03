@@ -785,7 +785,7 @@ components:
     ReservationAdministration:
       type: object
       additionalProperties: false
-      required: [id, debut, fin, canal, statut, accompagnantId, prenom, email, recherche, creeeLe]
+      required: [id, debut, fin, canal, statut, accompagnantId, prenom, email, recherche, creeLe]
       properties:
         id: { type: string }
         debut: { type: string, format: date-time }
@@ -798,7 +798,7 @@ components:
         whatsapp: { type: [string, 'null'] }
         recherche: { type: string, enum: [alternance, stage, cdi, cdd, freelance, orientation] }
         motivation: { type: [string, 'null'] }
-        creeeLe: { type: string, format: date-time }
+        creeLe: { type: string, format: date-time }
 
     Probleme:
       type: object
