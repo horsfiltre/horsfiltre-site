@@ -91,9 +91,10 @@ function depuisErreurMetier(e: ErreurMetier): Reponse {
 // ------------------------------------------------------------------------------------------------ CORS
 
 function motifOrigine(motif: string): RegExp {
-  // Les caractères spéciaux du motif sont neutralisés, sauf l'étoile, qui désigne UN sous-domaine (lettres, chiffres, tirets).
-  const echappe = motif.replace(/[.+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`^${echappe.replace('*', '[a-z0-9-]+')}$`, 'i');
+  // Tous les caractères spéciaux sont neutralisés, étoile comprise ; chaque étoile désigne ensuite UN sous-domaine
+  // (lettres, chiffres, tirets), jamais un point ni une barre oblique.
+  const echappe = motif.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`^${echappe.replaceAll('\\*', '[a-z0-9-]+')}$`, 'i');
 }
 
 function enTetesCors(origine: string | undefined, autorisees: readonly string[]): Record<string, string> {

@@ -271,6 +271,16 @@ test('CORS : les origines autorisées sont reconnues, les autres non, y compris 
   assert.equal((await m.appeler({ methode: 'GET', chemin: '/v1/creneaux' })).entetes['access-control-allow-origin'], undefined);
 });
 
+test('CORS : un motif à plusieurs étoiles les remplace toutes, et chacune ne désigne qu’un sous-domaine', async () => {
+  const m = await monde({ originesAutorisees: ['https://*.*.exemple.fr'] });
+  const avec = async (origin: string) => (await m.appeler({ methode: 'GET', chemin: '/v1/creneaux', entetes: { origin } })).entetes['access-control-allow-origin'];
+  assert.equal(await avec('https://a.b.exemple.fr'), 'https://a.b.exemple.fr');
+  assert.equal(await avec('https://a-1.b-2.exemple.fr'), 'https://a-1.b-2.exemple.fr');
+  for (const mauvaise of ['https://a.exemple.fr', 'https://a.b.c.exemple.fr', 'https://a..exemple.fr', 'https://a.b.exempleXfr', 'https://*.*.exemple.fr', 'https://a/b.c.exemple.fr']) {
+    assert.equal(await avec(mauvaise), undefined, mauvaise);
+  }
+});
+
 test('CORS : la requête préalable est acceptée pour une origine autorisée, refusée sinon', async () => {
   const m = await monde();
   const ok = await m.appeler({ methode: 'OPTIONS', chemin: '/v1/reservations', entetes: { origin: 'https://horsfiltre.fr' } });
