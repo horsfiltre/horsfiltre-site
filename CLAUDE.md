@@ -57,6 +57,7 @@ Site et plateforme d'un service d'accompagnement humain vers l'alternance, le st
 ## Dépendances
 - Règle des 14 jours : aucune version publiée depuis moins de 14 jours dans le job qui détient un secret. Vérifier avec `npm view <paquet> time --json`.
 - Actions GitHub épinglées par empreinte complète.
+- Les dépendances **indirectes** comptent : pour ajouter un paquet, `npm install --save-dev --save-exact --ignore-scripts --before=<date d'il y a 14 jours> <paquet>@<version>`, puis contrôler l'âge de tout ce que le verrou a ajouté (voir `api/README.md`).
 
 ## Langue
 - Phrases courtes, un message par écran, un verbe d'action par bouton.
