@@ -5,6 +5,11 @@
 # du CSS et du JavaScript intégrés. À retirer dès que le code sera
 # externalisé dans des fichiers séparés.
 # Les polices sont hébergées sur le site (public/fonts/) : plus aucune requête vers Google (RGPD).
+#
+# HSTS, par paliers : le tableau de bord de Cloudflare n'offre pas moins d'un mois, donc l'en-tête est ici.
+# 1) 3 novembre 2026 : 1 jour (86400). 2) puis 1 semaine, 3) 1 mois, 4) 6 mois, une étape à la fois.
+# includeSubDomains : seulement quand api.horsfiltre.fr existera et répondra en HTTPS.
+# preload : jamais avant 1 an de max-age sans incident, et c'est une décision à sens unique.
 
 /*
   Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
@@ -13,6 +18,7 @@
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=86400
 
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
