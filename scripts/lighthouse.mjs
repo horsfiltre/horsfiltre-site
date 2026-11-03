@@ -14,6 +14,9 @@ import { readFile, readdir, mkdir, writeFile, stat } from 'node:fs/promises';
 import { join, extname, relative, resolve, sep } from 'node:path';
 import lighthouse from 'lighthouse';
 import * as chromeLauncher from 'chrome-launcher';
+import { avecReprises } from './reprises.mjs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 
 const RACINE = resolve('public');
 const SORTIE = resolve('.lighthouse');
@@ -67,9 +70,41 @@ const base = `http://127.0.0.1:${serveur.address().port}`;
 // Sur un exécuteur GitHub éphémère (variable CI définie), Chrome est lancé sans bac à sable : le seul
 // contenu chargé est notre site statique, servi en local. En local, le bac à sable reste actif.
 const optionsParDefaut = process.env.CI ? '--headless=new --no-sandbox' : '--headless=new';
-const chrome = await chromeLauncher.launch({
-  chromePath: process.env.CHROME_PATH || undefined,
-  chromeFlags: (process.env.CHROME_FLAGS || optionsParDefaut).split(' ').filter(Boolean),
+// Sur un exécuteur GitHub, Chrome met parfois trop de temps à ouvrir son port de débogage. Le démarrage est rejoué
+// jusqu'à trois fois ; à chaque échec, la fin du journal d'erreur de Chrome est affichée, pour qu'une panne durable
+// se diagnostique. Seul le démarrage est rejoué : une mesure n'est jamais refaite.
+const ESSAIS_DEMARRAGE = 3;
+
+async function demarrerChrome() {
+  const profil = mkdtempSync(join(tmpdir(), 'lighthouse-chrome-'));
+  const lanceur = new chromeLauncher.Launcher({
+    chromePath: process.env.CHROME_PATH || undefined,
+    chromeFlags: (process.env.CHROME_FLAGS || optionsParDefaut).split(' ').filter(Boolean),
+    userDataDir: profil, // un dossier à nous : le lanceur n'y touche pas, on peut y lire le journal de Chrome
+  });
+  let reussi = false;
+  try {
+    await lanceur.launch();
+    reussi = true;
+    lanceur.profilTemporaire = profil; // supprimé à la fin de la mesure
+    return lanceur;
+  } catch (erreur) {
+    try {
+      const fin = readFileSync(join(profil, 'chrome-err.log'), 'utf8').trim().split('\n').slice(-20).join('\n');
+      if (fin) console.error(`Journal de Chrome (20 dernières lignes) :\n${fin}`);
+    } catch {
+      console.error("Journal de Chrome illisible : Chrome n'a probablement rien écrit.");
+    }
+    lanceur.kill();
+    throw erreur;
+  } finally {
+    if (!reussi) rmSync(profil, { recursive: true, force: true });
+  }
+}
+
+const chrome = await avecReprises(demarrerChrome, {
+  essais: ESSAIS_DEMARRAGE,
+  surEchec: (erreur, essai) => console.error(`Chrome n'a pas démarré (essai ${essai}/${ESSAIS_DEMARRAGE}) : ${erreur.message}`),
 });
 await mkdir(SORTIE, { recursive: true });
 
@@ -111,6 +146,11 @@ try {
 } finally {
   await chrome.kill();
   serveur.close();
+  try {
+    rmSync(chrome.profilTemporaire, { recursive: true, force: true });
+  } catch {
+    // un fichier encore ouvert (Windows) : le dossier est temporaire, le système le videra
+  }
 }
 
 await writeFile(join(SORTIE, 'resume.json'), JSON.stringify(resultats, null, 2));
