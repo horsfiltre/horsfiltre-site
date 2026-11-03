@@ -1,6 +1,6 @@
 # ADR-0004 — Organisation du dépôt et stack de l'étape 1
 
-Statut : proposée
+Statut : acceptée le 3 novembre 2026
 Date : 2026-11-02
 Décideur : Ilyas Laarif, pour l'équipe Hors Filtre
 Cadre : ADR-0003 (Cloudflare devant, AWS derrière), prompt maître v1.1
@@ -50,6 +50,6 @@ scripts/                 outils du dépôt (contrôle Lighthouse)
 - `@lhci/cli` 0.15.1, dernière version publiée, embarque Lighthouse 12.6.1 et vingt dépendances vulnérables sans correctif. Son remplacement supprime ces vulnérabilités.
 - Lighthouse 13.5.0 est plus exigeant que la version 12.6.1 : il a révélé deux défauts d'accessibilité sur la page en ligne (contraste et zone principale), corrigés dans ce lot.
 - `undici` est forcé en 7.30.1 (publiée le 15 octobre 2026) : elle corrige huit failles dont une contournant la validation des certificats TLS, dans la chaîne de `wrangler`, le job qui détient le jeton Cloudflare. `wrangler` 4.156.1, qui embarque le correctif, sera adopté une fois âgé de 14 jours.
-- Sept alertes restent ouvertes, toutes dues à `basic-ftp`, appelé par Lighthouse seulement pour télécharger à travers un proxy FTP. Ce code ne s'exécute jamais dans le dépôt ; aucune version de `get-uri` n'utilise encore la version corrigée. Sur décision de l'équipe du 2 novembre, elles sont classées dans Dependabot avec le motif « Vulnerable code is not actually used », et réexaminées à chaque mise à jour de Lighthouse.
+- Au moment de l'écriture, `npm audit` signalait sept alertes liées à `basic-ftp`, appelé par Lighthouse seulement pour télécharger à travers un proxy FTP : ce code ne s'exécute jamais dans le dépôt, et aucune version de `get-uri` n'utilisait encore la version corrigée. Le 3 novembre 2026, après la fusion du lot 0, la page Dependabot de GitHub affichait **zéro alerte ouverte et quinze fermées**. La cause de cette fermeture n'est pas établie ; à réexaminer à chaque mise à jour de Lighthouse.
 - Seuils alignés sur la loi 4.4, décision de l'équipe du 2 novembre : bonnes pratiques et référencement à 95, CLS à 0,05 ; performance à 90 et LCP à 2,5 s, inchangés. Le TBT est mesuré sans bloquer jusqu'au 9 novembre, puis son seuil est fixé d'après les mesures relevées sur GitHub : en local, il a varié de 45 à 364 ms d'un passage à l'autre sur l'accueil Pulse.
 - L'accueil Pulse franchit tous les seuils, mais son LCP médian (2,2 s) dépasse l'objectif de 1,8 s de la loi 4.4 : à traiter lors de la migration en Astro.
