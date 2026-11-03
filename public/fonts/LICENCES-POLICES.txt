@@ -1,0 +1,14 @@
+Polices hébergées sur ce site, sous licence SIL Open Font License, version 1.1
+(texte complet et FAQ : https://openfontlicense.org et https://scripts.sil.org/OFL).
+
+Bricolage Grotesque
+  Copyright 2022 The Bricolage Grotesque Project Authors (https://github.com/ateliertriay/bricolage)
+  Fichier : bricolage.woff2, graisses 700 à 800, réduit aux caractères latins utilisés par le site.
+
+Geist
+  Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
+  Fichier : geist.woff2, graisses 400 à 600, réduit aux caractères latins utilisés par le site.
+
+Ces polices ne déclarent aucun nom réservé. Les fichiers ci-dessus sont des versions modifiées
+(réduction du jeu de caractères) : elles sont fournies telles quelles, sans garantie,
+et ne peuvent pas être vendues seules.

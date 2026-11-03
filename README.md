@@ -15,7 +15,8 @@ public/                  Fichiers publiés tels quels
   dependabot.yml         Mises à jour des dépendances
   CODEOWNERS             Relecture obligatoire
 docs/adr/                Décisions d'architecture
-lighthouserc.json        Seuils de performance et d'accessibilité
+lighthouse.budgets.json  Seuils de performance et d'accessibilité
+scripts/lighthouse.mjs   Contrôle Lighthouse : trois passages, médiane, seuils
 .htmlvalidate.json       Règles de validation HTML
 ```
 
@@ -26,7 +27,7 @@ Prérequis : Node.js 22 (voir `.nvmrc`).
 ```bash
 npm ci
 npm run lint:html     # validation HTML
-npm run lhci          # performance, accessibilité, SEO
+npm run lighthouse    # performance, accessibilité, SEO
 npm run dev           # aperçu local avec les en-têtes de production
 ```
 
@@ -69,4 +70,4 @@ La politique de sécurité du contenu (voir `public/_headers`) interdit tout cod
 - pas de `<script>` intégré ni d'attribut `onclick` — tout passe par `public/app.js` et `addEventListener` ;
 - pas de ressource chargée depuis un domaine tiers : polices, images et scripts sont servis depuis le site.
 
-Voir `docs/adr/0003-page-accueil-externalisation-csp-stricte.md`.
+Voir `docs/adr/0007-page-accueil-externalisation-csp-stricte.md`.

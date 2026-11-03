@@ -1,4 +1,4 @@
-# ADR-0003 — Page d'accueil : code externalisé, polices auto-hébergées, CSP stricte
+# ADR-0007 — Page d'accueil : code externalisé, polices auto-hébergées, CSP stricte
 
 **Statut** : acceptée
 **Date** : 31 octobre 2026
