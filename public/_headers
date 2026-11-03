@@ -4,15 +4,18 @@
 # 'unsafe-inline' est toléré temporairement : la page actuelle contient
 # du CSS et du JavaScript intégrés. À retirer dès que le code sera
 # externalisé dans des fichiers séparés.
-# Google Fonts : à remplacer par des polices auto-hébergées (RGPD).
+# Les polices sont hébergées sur le site (public/fonts/) : plus aucune requête vers Google (RGPD).
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
   Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
+
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
 
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
