@@ -31,6 +31,26 @@ npm.cmd run test:integration
 
 Résultat attendu : `# tests 12`, `# pass 12`, `# fail 0`.
 
+## Les routes d'administration
+
+Quinze routes sous `/v1/admin/` (`src/admin.mts`) : accompagnants, règles de disponibilité, absences, créneaux, réservations, et la liste des réservations à risque. Le contrat est `docs/api/reservations.openapi.yaml`, et un test compare automatiquement ses opérations aux routes du code.
+
+**Contrôle d'accès, fait avant toute route d'administration** (`src/http.mts`) :
+
+| Situation | Réponse |
+| --- | --- |
+| Aucune identité vérifiée | 401, `WWW-Authenticate: Bearer` |
+| Identité hors du groupe `administrateurs` | 403 |
+| Membre du groupe `administrateurs` | la route s'exécute |
+
+Le nom du groupe est comparé **exactement** : `administrateurs-externes` ou `ADMINISTRATEURS` n'ouvrent rien. L'identité vient du jeton Cognito, vérifié par API Gateway ; la fonction n'en lit que l'identifiant et les groupes (`groupesDepuisClaim`).
+
+**Origines** : l'administration n'accepte que `originesAdministration` (par exemple `https://admin.horsfiltre.fr`). Le site public ne peut pas l'appeler depuis un navigateur, et l'administration ne peut pas appeler les routes publiques.
+
+**Audit** : chaque modification, et chaque lecture de coordonnées de candidats, laisse une trace `admin_action` avec l'identifiant opaque de l'acteur. Le journal ne contient **jamais** d'adresse e-mail, de prénom, de numéro de téléphone, de lien de visioconférence, de motif d'absence ni de message d'annulation : un test le vérifie.
+
+**Rendez-vous déjà pris** : modifier une règle, ajouter une absence ou désactiver un accompagnant ne supprime jamais un créneau réservé. La création d'une absence rend les réservations concernées ; `GET /v1/admin/conflits` liste à tout moment celles qui ne correspondent plus aux disponibilités.
+
 ## Amorcer les accompagnants
 
 Les associés ne se créent pas par l'API : un script les écrit dans la table, à partir d'un **fichier qui reste sur votre poste**. Les liens de visioconférence n'entrent donc jamais dans le dépôt ni dans une conversation. Le dossier `docs/sources/` est ignoré par Git.
@@ -66,3 +86,7 @@ Puis on contrôle l'âge de tout ce que le verrou a ajouté, avant de commiter.
 ## Ce qui n'est pas encore là
 
 Les gestionnaires de l'API (réservation, annulation, administration), l'envoi des e-mails, les rappels, et le déploiement des fonctions.
+
+## Démarrage de Chrome dans le contrôle de performance
+
+Sur un exécuteur GitHub, Chrome met parfois trop de temps à ouvrir son port de débogage : `chrome-launcher` échoue alors avec « waiting for dynamic debugging port in chrome-err.log », **avant toute mesure**. Le script `scripts/lighthouse.mjs` rejoue le démarrage jusqu'à trois fois et affiche la fin du journal de Chrome à chaque échec. **Seul le démarrage est rejoué** : une mesure qui dépasse un seuil n'est jamais refaite, car un second passage vert masquerait un défaut de marge.

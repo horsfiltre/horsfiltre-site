@@ -7,8 +7,8 @@ import type { Accompagnant } from '../../shared/src/index.mts';
 
 const FORMAT_IDENTIFIANT = /^[a-z][a-z0-9-]{1,19}$/;
 // Lettres de toutes les langues, accents, espace, trait d'union, apostrophe, point.
-const FORMAT_PRENOM = /^[\p{L}\p{M}][\p{L}\p{M}' ’.-]{0,59}$/u;
-const FORMAT_LIEN_MEET = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/;
+export const FORMAT_PRENOM = /^[\p{L}\p{M}][\p{L}\p{M}' ’.-]{0,59}$/u;
+export const FORMAT_LIEN_MEET = /^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}$/;
 // Le troisième champ est lu tel quel : c'est le contrôle du lien qui dit précisément ce qui ne va pas.
 const FORMAT_LIGNE = /^\s*([^:]+?)\s*:\s*([^:]+?)\s*:\s*(\S+)\s*$/;
 

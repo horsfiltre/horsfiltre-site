@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { identifiantCreneau, nouvelIdentifiant } from '../src/identifiants.mts';
 import { empreinteEmail } from '../src/reservation.mts';
 import { StockageMemoire, type Reservation } from '../src/stockage.mts';
-import { synchroniserCreneaux } from '../src/synchronisation.mts';
+import { diagnostiquerConflits, synchroniserCreneaux } from '../src/synchronisation.mts';
 import type { Creneau, Regle } from '../src/creneaux.mts';
 
 // Lundi 16 novembre 2026, 10 h à Paris : la fenêtre va jusqu'au 7 décembre.
@@ -120,4 +120,19 @@ test('une règle qui commence plus tard ne produit rien avant sa date de début'
   await stockage.ecrireRegle({ ...mardi, valideDu: '2026-11-24' });
   await synchroniserCreneaux(stockage, LUNDI);
   assert.equal(creneauxDe('ilyas').length, 8); // seulement les mardis 24 novembre et 1er décembre
+});
+
+test('le diagnostic liste les réservations devenues incohérentes, sans rien modifier', async () => {
+  const { stockage, reserver, creneauxDe } = await monde();
+  await synchroniserCreneaux(stockage, LUNDI);
+  assert.deepEqual(await diagnostiquerConflits(stockage, LUNDI), []); // rien à signaler au départ
+  const pris = creneauxDe('ilyas')[0]!;
+  await reserver(pris);
+  const libre = creneauxDe('ilyas')[1]!;
+  await stockage.ecrireRegle({ ...mardi, debut: '17:00', fin: '19:00' });
+  const avant = stockage.creneaux.size;
+  const conflits = await diagnostiquerConflits(stockage, LUNDI);
+  assert.deepEqual(conflits.map((x) => x.id), [pris.id]); // le créneau libre n'est pas un conflit : il sera simplement remplacé
+  assert.equal(stockage.creneaux.size, avant); // lecture seule
+  assert.equal((await stockage.lireCreneau(libre.id))!.statut, 'libre');
 });

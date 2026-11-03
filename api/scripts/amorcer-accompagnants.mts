@@ -44,16 +44,21 @@ if (emulateur) Object.assign(config, { endpoint: emulateur, credentials: { acces
 const stockage = new StockageDynamoDB(creerClientDocument(config), table);
 
 console.log(`Table : ${table}${appliquer ? "" : "   (simulation : rien n'est écrit)"}`);
+let aEcrire = 0;
 for (const a of accompagnants) {
   const existant = await stockage.lireAccompagnant(a.id);
   const etat = !existant ? 'création' : existant.prenom === a.prenom && existant.lienVisio === a.lienVisio && existant.actif === a.actif ? 'inchangé' : 'mise à jour';
   console.log(`  ${a.id.padEnd(12)} ${a.prenom.padEnd(14)} ${masquerLien(a.lienVisio)}   ${etat}`);
-  if (appliquer && etat !== 'inchangé') await stockage.ecrireAccompagnant(a);
+  if (etat === 'inchangé') continue;
+  aEcrire++;
+  if (appliquer) await stockage.ecrireAccompagnant(a);
 }
 
-if (appliquer) {
-  const relus = await stockage.listerAccompagnants();
-  console.log(`\nÉcrit. La table contient maintenant ${relus.length} accompagnant(s) : ${relus.map((r) => r.id).join(', ')}.`);
+const relus = appliquer ? await stockage.listerAccompagnants() : [];
+if (aEcrire === 0) {
+  console.log('\nRien à écrire : la table est déjà à jour.');
+} else if (appliquer) {
+  console.log(`\nÉcrit : ${aEcrire} accompagnant(s). La table en contient maintenant ${relus.length} : ${relus.map((r) => r.id).join(', ')}.`);
 } else {
-  console.log('\nSimulation terminée. Relancez avec --appliquer pour écrire.');
+  console.log(`\nSimulation terminée : ${aEcrire} écriture(s) à faire. Relancez avec --appliquer pour les écrire.`);
 }

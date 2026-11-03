@@ -252,6 +252,7 @@ paths:
               schema: { $ref: '#/components/schemas/Accompagnant' }
         '401': { $ref: '#/components/responses/NonAuthentifie' }
         '403': { $ref: '#/components/responses/Interdit' }
+        '404': { $ref: '#/components/responses/Introuvable' }
         '422': { $ref: '#/components/responses/DonneesInvalides' }
 
   /v1/admin/regles:
@@ -386,6 +387,27 @@ paths:
         '401': { $ref: '#/components/responses/NonAuthentifie' }
         '403': { $ref: '#/components/responses/Interdit' }
         '404': { $ref: '#/components/responses/Introuvable' }
+
+  /v1/admin/conflits:
+    get:
+      tags: [Administration]
+      operationId: listerConflits
+      summary: Réservations qui ne correspondent plus aux disponibilités
+      description: >-
+        Quand une règle change, qu'une absence est ajoutée ou qu'un accompagnant est désactivé, les créneaux libres qui
+        ne sont plus voulus disparaissent, mais **un créneau déjà réservé n'est jamais supprimé**. Cette liste donne les
+        réservations confirmées qui portent un tel créneau : l'équipe décide de reporter ou d'annuler. Lecture seule.
+      security: [{ cognitoAdministration: [] }]
+      responses:
+        '200':
+          description: Réservations à traiter. Liste vide si tout est cohérent.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ReservationAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
 
   /v1/admin/creneaux:
     get:

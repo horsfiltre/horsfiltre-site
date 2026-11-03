@@ -19,7 +19,8 @@ export type BilanSynchronisation = {
   conflits: Creneau[];
 };
 
-export async function synchroniserCreneaux(stockage: Stockage, maintenant: Date): Promise<BilanSynchronisation> {
+/** Ce que les règles, les absences et les accompagnants actifs demandent, face à ce qui existe. Ne modifie rien. */
+async function planifier(stockage: Stockage, maintenant: Date) {
   const depuis = dateParis(maintenant);
   const jusqua = ajouterJours(depuis, HORIZON_JOURS);
 
@@ -29,8 +30,20 @@ export async function synchroniserCreneaux(stockage: Stockage, maintenant: Date)
   const voulus = genererCreneaux({ regles, absences, depuis, jusqua });
 
   const existants = await stockage.listerCreneaux(instantParis(depuis, '00:00').toISOString(), instantParis(jusqua, '23:59').toISOString());
-  const idsExistants = new Set(existants.map((c) => c.id));
-  const idsVoulus = new Set(voulus.map((c) => c.id));
+  return { voulus, existants, idsExistants: new Set(existants.map((c) => c.id)), idsVoulus: new Set(voulus.map((c) => c.id)) };
+}
+
+/**
+ * Les créneaux réservés qui ne correspondent plus aux règles, aux absences ou aux accompagnants actifs.
+ * Lecture seule : sert à prévenir l'équipe, qui décide de reporter ou d'annuler.
+ */
+export async function diagnostiquerConflits(stockage: Stockage, maintenant: Date): Promise<Creneau[]> {
+  const { existants, idsVoulus } = await planifier(stockage, maintenant);
+  return existants.filter((c) => c.origine === 'regle' && c.statut === 'reserve' && !idsVoulus.has(c.id));
+}
+
+export async function synchroniserCreneaux(stockage: Stockage, maintenant: Date): Promise<BilanSynchronisation> {
+  const { voulus, existants, idsExistants, idsVoulus } = await planifier(stockage, maintenant);
 
   const aAjouter = voulus.filter((c) => !idsExistants.has(c.id));
   await stockage.ecrireCreneaux(aAjouter);

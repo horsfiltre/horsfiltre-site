@@ -1,6 +1,6 @@
 // Les routes publiques de l'API de réservation, sans AWS : une requête entre, une réponse sort.
 // L'adaptation à API Gateway (lambda.mts) et le branchement du stockage viennent ensuite.
-// Contrat : docs/api/reservations.openapi.yaml.
+// Contrat : docs/api/reservations.openapi.yaml. Les routes d'administration sont dans admin.mts.
 import {
   ErreurMetier,
   FORMAT_IDENTIFIANT,
@@ -16,109 +16,27 @@ import {
   reserverCreneau,
   validerDemande,
   type Reservation,
-  type Stockage,
 } from '../../shared/src/index.mts';
-import type { VerificationTurnstile } from './turnstile.mts';
+import { ROUTES_ADMIN } from './admin.mts';
+import {
+  ENTETES_COMMUNS,
+  FORMAT_CLE_IDEMPOTENCE,
+  FORMAT_DATE,
+  GROUPE_ADMINISTRATEURS,
+  ID,
+  depuisErreurMetier,
+  enTetesCors,
+  json,
+  lireJson,
+  prevenir,
+  probleme,
+  type DependancesHttp,
+  type Reponse,
+  type Requete,
+  type Route,
+} from './commun.mts';
 
-export type Requete = {
-  methode: string;
-  chemin: string;
-  requete: Record<string, string | undefined>;
-  /** En-têtes, noms en minuscules. */
-  entetes: Record<string, string | undefined>;
-  corps: string | null;
-  ip?: string;
-  idRequete: string;
-};
-
-export type Reponse = { statut: number; entetes: Record<string, string>; corps: string };
-
-export type DependancesHttp = {
-  stockage: Stockage;
-  maintenant: () => Date;
-  /** Secret de signature des liens d'annulation, lu au démarrage dans le magasin de paramètres. */
-  secretJeton: string;
-  verifierTurnstile: (jeton: string, ip?: string) => Promise<VerificationTurnstile>;
-  /** Prénom affiché pour un accompagnant. */
-  prenomDe: (accompagnantId: string) => Promise<string>;
-  /** Origines autorisées à appeler l'API depuis un navigateur. `https://*.exemple.fr` désigne un sous-domaine. */
-  originesAutorisees: readonly string[];
-  /** Branchés sur l'envoi des e-mails au lot 6c. Une erreur ici ne fait jamais échouer la requête. */
-  apresReservation?: (evt: { reservation: Reservation; jeton: string }) => Promise<void>;
-  apresAnnulation?: (evt: { reservation: Reservation }) => Promise<void>;
-  apresReport?: (evt: { reservation: Reservation }) => Promise<void>;
-  /** Journal structuré. Ne reçoit jamais d'adresse e-mail, de prénom ni de numéro de téléphone. */
-  journal?: (evenement: Record<string, unknown>) => void;
-};
-
-const TAILLE_MAX_CORPS = 8192;
-const FORMAT_CLE_IDEMPOTENCE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const FORMAT_DATE = /^\d{4}-\d{2}-\d{2}$/;
-const ID = '([0-9A-HJKMNP-TV-Z]{26})';
-
-// ------------------------------------------------------------------------------------------------ réponses
-
-const ENTETES_COMMUNS = { 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } as const;
-
-function json(statut: number, donnees: unknown, entetes: Record<string, string> = {}): Reponse {
-  return { statut, entetes: { ...ENTETES_COMMUNS, 'content-type': 'application/json; charset=utf-8', ...entetes }, corps: JSON.stringify(donnees) };
-}
-
-/** Format « problem details » (RFC 9457), comme le contrat d'API. `erreurs` donne un message par champ. */
-function probleme(statut: number, code: string, titre: string, extra: Record<string, unknown> = {}, entetes: Record<string, string> = {}): Reponse {
-  const corps = { type: `https://horsfiltre.fr/erreurs/${code.replaceAll('_', '-')}`, title: titre, status: statut, code, ...extra };
-  return { statut, entetes: { ...ENTETES_COMMUNS, 'content-type': 'application/problem+json; charset=utf-8', ...entetes }, corps: JSON.stringify(corps) };
-}
-
-const ERREURS_METIER: Record<string, { statut: number; titre: string }> = {
-  creneau_indisponible: { statut: 409, titre: "Ce créneau vient d'être pris." },
-  trop_de_reservations: { statut: 409, titre: 'Vous avez déjà un échange réservé. Annulez-le ou reportez-le depuis votre e-mail de confirmation.' },
-  reservation_deja_annulee: { statut: 409, titre: 'Cette réservation est déjà annulée.' },
-  reservation_passee: { statut: 409, titre: 'Cet échange a déjà commencé : il ne peut plus être modifié.' },
-  reservation_introuvable: { statut: 404, titre: 'Réservation introuvable.' },
-  jeton_invalide: { statut: 403, titre: "Ce lien n'est pas valide." },
-  jeton_expire: { statut: 403, titre: 'Ce lien a expiré.' },
-};
-
-function depuisErreurMetier(e: ErreurMetier): Reponse {
-  if (e.code === 'creneau_introuvable') {
-    return probleme(422, 'donnees_invalides', 'Certaines informations sont à corriger.', { erreurs: { creneauId: "Ce créneau n'existe pas : rechargez la page." } });
-  }
-  const connue = ERREURS_METIER[e.code];
-  return connue ? probleme(connue.statut, e.code, connue.titre) : probleme(500, 'erreur_interne', "Une erreur s'est produite. Réessayez dans un instant.");
-}
-
-// ------------------------------------------------------------------------------------------------ CORS
-
-function motifOrigine(motif: string): RegExp {
-  // Tous les caractères spéciaux sont neutralisés, étoile comprise ; chaque étoile désigne ensuite UN sous-domaine
-  // (lettres, chiffres, tirets), jamais un point ni une barre oblique.
-  const echappe = motif.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return new RegExp(`^${echappe.replaceAll('\\*', '[a-z0-9-]+')}$`, 'i');
-}
-
-function enTetesCors(origine: string | undefined, autorisees: readonly string[]): Record<string, string> {
-  if (!origine || !autorisees.some((m) => motifOrigine(m).test(origine))) return {};
-  return { 'access-control-allow-origin': origine, vary: 'Origin' };
-}
-
-// ------------------------------------------------------------------------------------------------ routes
-
-type Contexte = { deps: DependancesHttp; req: Requete; parametres: string[]; maintenant: Date };
-type Route = { methode: string; motif: RegExp; nom: string; traiter: (c: Contexte) => Promise<Reponse> };
-
-function lireJson(req: Requete): { ok: true; valeur: unknown } | { ok: false; reponse: Reponse } {
-  if (!(req.entetes['content-type'] ?? '').toLowerCase().startsWith('application/json')) {
-    return { ok: false, reponse: probleme(415, 'type_non_supporte', 'Le contenu doit être au format JSON.') };
-  }
-  const corps = req.corps ?? '';
-  if (Buffer.byteLength(corps) > TAILLE_MAX_CORPS) return { ok: false, reponse: probleme(413, 'corps_trop_grand', 'La demande est trop volumineuse.') };
-  try {
-    return { ok: true, valeur: JSON.parse(corps) };
-  } catch {
-    return { ok: false, reponse: probleme(400, 'json_invalide', "Le contenu n'est pas du JSON valide.") };
-  }
-}
+export type { DependancesHttp, Reponse, Requete } from './commun.mts';
 
 function cleIdempotence(req: Requete): { ok: true; cle: string } | { ok: false; reponse: Reponse } {
   const cle = req.entetes['idempotency-key'];
@@ -130,15 +48,6 @@ function cleIdempotence(req: Requete): { ok: true; cle: string } | { ok: false; 
 
 async function vue(deps: DependancesHttp, r: Reservation) {
   return { id: r.id, debut: r.debut, fin: r.fin, canal: r.canal, statut: r.statut, accompagnant: { prenom: await deps.prenomDe(r.accompagnantId) } };
-}
-
-async function prevenir(deps: DependancesHttp, fn: (() => Promise<void>) | undefined, nom: string): Promise<void> {
-  if (!fn) return;
-  try {
-    await fn();
-  } catch (e) {
-    deps.journal?.({ niveau: 'erreur', evenement: 'effet_apres_requete_en_echec', effet: nom, erreur: e instanceof Error ? e.name : 'inconnue' });
-  }
 }
 
 const jetonDeLaRequete = (req: Requete): string | undefined => {
@@ -226,7 +135,7 @@ const ROUTES: Route[] = [
         const r = await consulterReservation(service, jeton);
         if (r.id !== parametres[0]) return depuisErreurMetier(new ErreurMetier('jeton_invalide'));
         const annulee = await annulerReservation(service, jeton);
-        await prevenir(deps, deps.apresAnnulation && (() => deps.apresAnnulation!({ reservation: annulee })), 'annulation');
+        await prevenir(deps, deps.apresAnnulation && (() => deps.apresAnnulation!({ reservation: annulee, parAdministrateur: false })), 'annulation');
         return json(200, await vue(deps, annulee));
       } catch (e) {
         if (e instanceof ErreurMetier) return depuisErreurMetier(e);
@@ -264,28 +173,55 @@ const ROUTES: Route[] = [
   },
 ];
 
-const METHODES_PAR_CHEMIN = (chemin: string): string[] => ROUTES.filter((r) => r.motif.test(chemin)).map((r) => r.methode);
+
+const TOUTES_LES_ROUTES: Route[] = [...ROUTES, ...ROUTES_ADMIN];
+const METHODES_PAR_CHEMIN = (chemin: string): string[] => TOUTES_LES_ROUTES.filter((r) => r.motif.test(chemin)).map((r) => r.methode);
+
+/** Contrôle d'accès des routes d'administration : une identité vérifiée, membre du groupe des administrateurs. */
+function controleAcces(req: Requete): Reponse | undefined {
+  if (!req.identite) return probleme(401, 'non_authentifie', 'Connexion requise.', {}, { 'www-authenticate': 'Bearer' });
+  if (!req.identite.groupes.includes(GROUPE_ADMINISTRATEURS)) return probleme(403, 'acces_refuse', "Cet accès est réservé à l'équipe.");
+  return undefined;
+}
 
 // ------------------------------------------------------------------------------------------------ point d'entrée
 
 export function creerGestionnaire(deps: DependancesHttp): (req: Requete) => Promise<Reponse> {
   return async (req) => {
     const debut = Date.now();
-    const cors = enTetesCors(req.entetes.origin, deps.originesAutorisees);
+    // Les origines autorisées dépendent de la route : le site public ne peut pas appeler l'administration depuis un navigateur.
+    const cible = TOUTES_LES_ROUTES.find((r) => r.motif.test(req.chemin));
+    const cors = enTetesCors(req.entetes.origin, cible?.admin ? (deps.originesAdministration ?? []) : deps.originesAutorisees);
     let nomRoute = 'inconnue';
+    let admin = false;
     let reponse: Reponse;
     try {
       if (req.methode === 'OPTIONS') {
         nomRoute = 'preflight';
         reponse = Object.keys(cors).length
-          ? { statut: 204, entetes: { ...ENTETES_COMMUNS, ...cors, 'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type, idempotency-key', 'access-control-max-age': '600' }, corps: '' }
+          ? {
+              statut: 204,
+              entetes: {
+                ...ENTETES_COMMUNS, ...cors,
+                'access-control-allow-methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
+                'access-control-allow-headers': 'content-type, idempotency-key, authorization',
+                'access-control-max-age': '600',
+              },
+              corps: '',
+            }
           : probleme(403, 'origine_refusee', "Cette origine n'est pas autorisée.");
       } else {
-        const route = ROUTES.find((r) => r.methode === req.methode && r.motif.test(req.chemin));
+        const route = TOUTES_LES_ROUTES.find((r) => r.methode === req.methode && r.motif.test(req.chemin));
         if (route) {
           nomRoute = route.nom;
-          const parametres = (route.motif.exec(req.chemin) ?? []).slice(1);
-          reponse = await route.traiter({ deps, req, parametres, maintenant: deps.maintenant() });
+          admin = route.admin === true;
+          const refus = admin ? controleAcces(req) : undefined;
+          if (refus) {
+            reponse = refus;
+          } else {
+            const parametres = (route.motif.exec(req.chemin) ?? []).slice(1);
+            reponse = await route.traiter({ deps, req, parametres, maintenant: deps.maintenant() });
+          }
         } else {
           const permises = METHODES_PAR_CHEMIN(req.chemin);
           reponse = permises.length
@@ -301,8 +237,11 @@ export function creerGestionnaire(deps: DependancesHttp): (req: Requete) => Prom
     reponse = { ...reponse, entetes: { ...reponse.entetes, ...cors } };
     let code: string | undefined;
     try { code = (JSON.parse(reponse.corps || 'null') as { code?: string } | null)?.code; } catch { /* corps vide */ }
-    deps.journal?.({ niveau: 'info', evenement: 'requete', idRequete: req.idRequete, methode: req.methode, route: nomRoute, statut: reponse.statut, code, dureeMs: Date.now() - debut });
+    deps.journal?.({
+      niveau: 'info', evenement: 'requete', idRequete: req.idRequete, methode: req.methode, route: nomRoute, statut: reponse.statut, code, dureeMs: Date.now() - debut,
+      // L'identifiant de l'acteur est opaque : il permet de retrouver qui a fait quoi, sans nom ni adresse.
+      ...(admin && req.identite ? { acteur: req.identite.sub } : {}),
+    });
     return reponse;
   };
 }
-
