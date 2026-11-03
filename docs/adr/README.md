@@ -11,5 +11,6 @@ Chaque choix structurant fait l'objet d'un ADR : contexte, options comparées, d
 | 0005 | Authentification de l'administration au 17 novembre | 2 novembre 2026 | Acceptée le 3 novembre 2026 |
 | 0006 | Session et connexion des Coulisses avec Cognito | lot 7 | À rédiger |
 | 0007 | Page d'accueil : code externalisé, polices auto-hébergées, CSP stricte | 31 octobre 2026 | Acceptée, dans la pull request n° 2 sous le numéro 0003 : renumérotée au lot 0 |
+| 0008 | Préproduction provisoire dans le compte de production | 3 novembre 2026 | Acceptée le 3 novembre 2026, jusqu'à la création du compte `horsfiltre-preprod` |
 
 Le numéro 0007 de la page d'accueil n'est pas chronologique : il évite de renuméroter les ADR 0004 à 0006, déjà cités par le prompt maître.
