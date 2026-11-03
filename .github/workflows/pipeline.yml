@@ -60,6 +60,10 @@ jobs:
       - name: Vérifier les signatures et la provenance des paquets npm
         run: npm audit signatures
 
+      - name: Tests unitaires
+        # Règles de la réservation (shared/) : créneaux, prix, jetons. Node 22 exécute le TypeScript sans compilation.
+        run: npm test
+
       - name: Valider le HTML
         run: npm run lint:html
 
