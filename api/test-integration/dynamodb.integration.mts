@@ -7,7 +7,7 @@
 // Le test écrit des données d'essai en 2030, avec un accompagnant unique par test, et les supprime à la fin.
 // Il refuse de tourner contre une table dont le nom ne commence pas par « preprod- ».
 import { CreateTableCommand, DescribeTableCommand, DynamoDBClient, type DynamoDBClientConfig } from '@aws-sdk/client-dynamodb';
-import { DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 import { definirContrat } from '../../shared/test/contrat-stockage.mts';
 import { creerClientDocument, StockageDynamoDB } from '../src/stockage-dynamodb.mts';
 
@@ -53,9 +53,18 @@ if (emulateur) await creerTableEmulee();
 definirContrat({
   nom: emulateur ? 'DynamoDB émulé' : `DynamoDB ${table}`,
   creer: async () => new StockageDynamoDB(doc, table),
-  nettoyer: async (creneaux, reservations) => {
-    for (const c of creneaux) {
-      await doc.send(new DeleteCommand({ TableName: table, Key: { PK: `ACCOMP#${c.accompagnantId}`, SK: `CRENEAU#${c.debut}` } }));
+  nettoyer: async (_creneaux, reservations, accompagnants) => {
+    // Tout ce qu'un test écrit pour un accompagnant (profil, règles, absences, créneaux) vit dans sa partition.
+    for (const acc of accompagnants) {
+      let suite: Record<string, unknown> | undefined;
+      do {
+        const page = await doc.send(new QueryCommand({
+          TableName: table, KeyConditionExpression: 'PK = :p', ExpressionAttributeValues: { ':p': `ACCOMP#${acc}` },
+          ProjectionExpression: 'PK, SK', ExclusiveStartKey: suite,
+        }));
+        for (const e of page.Items ?? []) await doc.send(new DeleteCommand({ TableName: table, Key: { PK: e.PK, SK: e.SK } }));
+        suite = page.LastEvaluatedKey;
+      } while (suite);
     }
     for (const r of reservations) {
       await doc.send(new DeleteCommand({ TableName: table, Key: { PK: `RESA#${r.id}`, SK: 'META' } }));

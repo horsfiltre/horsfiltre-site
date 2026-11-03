@@ -6,3 +6,4 @@ export * from './reservation.mts';
 export * from './prix.mts';
 export * from './stockage.mts';
 export * from './service.mts';
+export * from './synchronisation.mts';

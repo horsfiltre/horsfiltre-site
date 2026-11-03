@@ -1,7 +1,7 @@
 // Ce que le cœur de la réservation demande au stockage. DynamoDB l'implémentera avec des écritures
 // conditionnelles et des transactions ; l'implémentation en mémoire ci-dessous sert aux tests.
 import type { Canal, Recherche } from './constantes.mts';
-import type { Creneau } from './creneaux.mts';
+import type { Absence, Creneau, Regle } from './creneaux.mts';
 
 export type Reservation = {
   id: string;
@@ -20,6 +20,9 @@ export type Reservation = {
   fuseau: string;
   creeLe: string;
 };
+
+/** Un associé qui accompagne. Seuls les accompagnants actifs ont des créneaux. */
+export type Accompagnant = { id: string; prenom: string; lienVisio: string; actif: boolean };
 
 export type CodeErreur =
   | 'creneau_indisponible'
@@ -55,11 +58,43 @@ export interface Stockage {
   /** Atomique : le nouveau créneau est pris et l'ancien libéré, ou rien ne change. */
   reporter(reservationId: string, nouveauCreneauId: string): Promise<Reservation>;
   changerStatutCreneau(id: string, statut: 'libre' | 'ferme'): Promise<Creneau>;
+
+  // -------------------------------------------------------------------------------- administration
+
+  listerAccompagnants(): Promise<Accompagnant[]>;
+  lireAccompagnant(id: string): Promise<Accompagnant | undefined>;
+  /** Crée ou remplace un accompagnant. */
+  ecrireAccompagnant(accompagnant: Accompagnant): Promise<void>;
+
+  listerRegles(accompagnantId: string): Promise<Regle[]>;
+  lireRegle(id: string): Promise<Regle | undefined>;
+  /** Crée ou remplace une règle (même identifiant, même accompagnant). */
+  ecrireRegle(regle: Regle): Promise<void>;
+  /** Faux si la règle n'existe pas. */
+  supprimerRegle(id: string): Promise<boolean>;
+
+  listerAbsences(accompagnantId: string): Promise<Absence[]>;
+  lireAbsence(id: string): Promise<Absence | undefined>;
+  ecrireAbsence(absence: Absence): Promise<void>;
+  /** Faux si l'absence n'existe pas. */
+  supprimerAbsence(id: string): Promise<boolean>;
+
+  /**
+   * Supprime un créneau qui n'est pas réservé. Atomique : un créneau réservé entre-temps n'est jamais supprimé.
+   * Rend `absent` si le créneau n'existe pas, `reserve` s'il porte une réservation.
+   */
+  supprimerCreneau(id: string): Promise<'supprime' | 'absent' | 'reserve'>;
+
+  /** Réservations (confirmées et annulées) dont le début est compris entre deux instants ISO, inclus. */
+  listerReservations(depuis: string, jusqua: string): Promise<Reservation[]>;
 }
 
 export class StockageMemoire implements Stockage {
   readonly creneaux = new Map<string, Creneau>();
   readonly reservations = new Map<string, Reservation>();
+  readonly accompagnants = new Map<string, Accompagnant>();
+  readonly regles = new Map<string, Regle>();
+  readonly absences = new Map<string, Absence>();
 
   async ecrireCreneaux(creneaux: readonly Creneau[]): Promise<void> {
     for (const c of creneaux) if (!this.creneaux.has(c.id)) this.creneaux.set(c.id, { ...c });
@@ -124,5 +159,56 @@ export class StockageMemoire implements Stockage {
     if (c.statut === 'reserve') throw new ErreurMetier('creneau_indisponible');
     c.statut = statut;
     return { ...c };
+  }
+
+  async listerAccompagnants(): Promise<Accompagnant[]> {
+    return [...this.accompagnants.values()].map((a) => ({ ...a })).sort((a, b) => a.id.localeCompare(b.id));
+  }
+  async lireAccompagnant(id: string): Promise<Accompagnant | undefined> {
+    const a = this.accompagnants.get(id);
+    return a && { ...a };
+  }
+  async ecrireAccompagnant(a: Accompagnant): Promise<void> {
+    this.accompagnants.set(a.id, { ...a });
+  }
+
+  async listerRegles(accompagnantId: string): Promise<Regle[]> {
+    return [...this.regles.values()].filter((r) => r.accompagnantId === accompagnantId).map((r) => ({ ...r })).sort((a, b) => a.id.localeCompare(b.id));
+  }
+  async lireRegle(id: string): Promise<Regle | undefined> {
+    const r = this.regles.get(id);
+    return r && { ...r };
+  }
+  async ecrireRegle(r: Regle): Promise<void> {
+    this.regles.set(r.id, { ...r, valideAu: r.valideAu ?? null });
+  }
+  async supprimerRegle(id: string): Promise<boolean> {
+    return this.regles.delete(id);
+  }
+
+  async listerAbsences(accompagnantId: string): Promise<Absence[]> {
+    return [...this.absences.values()].filter((a) => a.accompagnantId === accompagnantId).map((a) => ({ ...a })).sort((a, b) => a.du.localeCompare(b.du) || a.id.localeCompare(b.id));
+  }
+  async lireAbsence(id: string): Promise<Absence | undefined> {
+    const a = this.absences.get(id);
+    return a && { ...a };
+  }
+  async ecrireAbsence(a: Absence): Promise<void> {
+    this.absences.set(a.id, { ...a });
+  }
+  async supprimerAbsence(id: string): Promise<boolean> {
+    return this.absences.delete(id);
+  }
+
+  async supprimerCreneau(id: string): Promise<'supprime' | 'absent' | 'reserve'> {
+    const c = this.creneaux.get(id);
+    if (!c) return 'absent';
+    if (c.statut === 'reserve') return 'reserve';
+    this.creneaux.delete(id);
+    return 'supprime';
+  }
+
+  async listerReservations(depuis: string, jusqua: string): Promise<Reservation[]> {
+    return [...this.reservations.values()].filter((r) => r.debut >= depuis && r.debut <= jusqua).map((r) => ({ ...r })).sort((a, b) => a.debut.localeCompare(b.debut) || a.id.localeCompare(b.id));
   }
 }
