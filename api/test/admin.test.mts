@@ -191,21 +191,20 @@ test('règles : la liste, filtrable par accompagnant, est ordonnée', async () =
 
 test('règles : remplacer une règle garde son identifiant, change ses créneaux libres, jamais un créneau réservé', async () => {
   const m = await monde();
-  const pris = m.creneauxDe('ilyas')[0]!;
-  await m.reserver(pris);
-  const r = await m.envoyer('PUT', '/v1/admin/regles/R-ILYAS'.replace('R-ILYAS', 'R-ILYAS'), { accompagnantId: 'ilyas', jour: 'mardi', debut: '17:00', fin: '19:00', valideDu: '2026-11-01' });
-  // « R-ILYAS » n'a pas le format d'un identifiant public : l'itinéraire ne le reconnaît pas.
-  assert.equal(r.statut, 404);
+  // La règle d'amorçage du décor n'a pas d'identifiant public : on la recrée par l'API, avec les mêmes horaires.
   await m.stockage.supprimerRegle('R-ILYAS');
   const creee = m.lire(await m.envoyer('POST', '/v1/admin/regles', { accompagnantId: 'ilyas', jour: 'mardi', debut: '18:00', fin: '21:00', valideDu: '2026-11-01' }));
-  await synchroniserCreneaux(m.stockage, LUNDI);
-  const pris2 = m.creneauxDe('ilyas').find((c) => c.debut === pris.debut)!;
-  if (pris2.statut !== 'reserve') await m.reserver(pris2);
+  const [pris, autreLibre] = m.creneauxDe('ilyas'); // mardi 17 novembre, 18 h et 18 h 45
+  await m.reserver(pris!);
+
   const ok = await m.envoyer('PUT', `/v1/admin/regles/${creee.id}`, { accompagnantId: 'ilyas', jour: 'mardi', debut: '17:00', fin: '19:00', valideDu: '2026-11-01' });
   assert.equal(ok.statut, 200);
-  assert.equal(m.lire(ok).id, creee.id);
+  assert.equal(m.lire(ok).id, creee.id); // même identifiant
   assert.equal(m.lire(ok).debut, '17:00');
-  assert.equal((await m.stockage.lireCreneau(pris2.id))!.statut, 'reserve'); // le rendez-vous pris n'a pas bougé
+  assert.equal((await m.stockage.lireCreneau(pris!.id))!.statut, 'reserve'); // le rendez-vous pris n'a pas bougé
+  assert.equal(await m.stockage.lireCreneau(autreLibre!.id), undefined); // l'ancien créneau libre a disparu
+  const nouveauCreneau = m.creneauxDe('ilyas').find((c) => c.debut === '2026-11-17T16:00:00.000Z'); // 17 h à Paris
+  assert.equal(nouveauCreneau?.statut, 'libre'); // et le nouveau horaire est ouvert
 });
 
 test('règles : l’accompagnant d’une règle ne se change pas ; une règle inconnue donne 404', async () => {
