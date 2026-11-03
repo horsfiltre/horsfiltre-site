@@ -15,6 +15,7 @@ export type Dependances = {
 export async function reserverCreneau(
   deps: Dependances,
   demande: DemandeValidee,
+  options: { id?: string } = {},
 ): Promise<{ reservation: Reservation; jeton: string }> {
   const maintenant = deps.maintenant();
   const creneau = await deps.stockage.lireCreneau(demande.creneauId);
@@ -26,7 +27,7 @@ export async function reserverCreneau(
     throw new ErreurMetier('trop_de_reservations');
 
   const reservation: Reservation = {
-    id: nouvelIdentifiant(),
+    id: options.id ?? nouvelIdentifiant(),
     creneauId: creneau.id,
     accompagnantId: creneau.accompagnantId,
     debut: creneau.debut,
