@@ -1,0 +1,42 @@
+{
+  "passages": 3,
+  "seuils": {
+    "performance": {
+      "libelle": "Performance",
+      "categorie": "performance",
+      "min": 0.9
+    },
+    "accessibilite": {
+      "libelle": "Accessibilité",
+      "categorie": "accessibility",
+      "min": 0.95
+    },
+    "bonnes_pratiques": {
+      "libelle": "Bonnes pratiques",
+      "categorie": "best-practices",
+      "min": 0.95
+    },
+    "referencement": {
+      "libelle": "Référencement",
+      "categorie": "seo",
+      "min": 0.95
+    },
+    "lcp": {
+      "libelle": "LCP (ms)",
+      "audit": "largest-contentful-paint",
+      "max": 2500
+    },
+    "cls": {
+      "libelle": "CLS",
+      "audit": "cumulative-layout-shift",
+      "max": 0.05
+    },
+    "tbt": {
+      "libelle": "TBT (ms)",
+      "audit": "total-blocking-time",
+      "max": 200,
+      "informatif": true,
+      "note": "Mesuré sans bloquer jusqu'au 9 novembre 2026, puis seuil fixé d'après les mesures sur GitHub (décision du 2 novembre)."
+    }
+  }
+}

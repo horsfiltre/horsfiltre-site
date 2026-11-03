@@ -1,0 +1,789 @@
+openapi: 3.1.0
+info:
+  title: API de réservation Hors Filtre
+  version: 1.0.0
+  summary: Réservation du premier échange et administration des créneaux.
+  description: |
+    Contrat de l'étape 1 (ADR-0003, ADR-0004, ADR-0005). Il fait foi pour l'interface de réservation,
+    l'administration et les fonctions Lambda.
+
+    Règles transverses :
+    - Les dates sont au format ISO 8601 avec décalage horaire ; l'agenda est exprimé dans le fuseau `Europe/Paris`.
+    - Les réponses qui portent des créneaux ne sont jamais mises en cache (`Cache-Control: no-store`).
+    - Les erreurs suivent le format « problem details » (RFC 9457).
+    - Une réservation est enregistrée par une écriture conditionnelle : deux personnes ne réservent jamais le même créneau.
+  contact:
+    email: contact@horsfiltre.fr
+  license:
+    name: Propriétaire
+    identifier: UNLICENSED
+servers:
+  - url: https://api.horsfiltre.fr
+    description: Production
+tags:
+  - name: Réservation
+    description: Routes publiques, protégées par Turnstile et une limite de débit.
+  - name: Gestion
+    description: Routes publiques, protégées par un jeton signé reçu par e-mail.
+  - name: Administration
+    description: Routes réservées au groupe `administrateurs` du pool Cognito d'administration.
+
+paths:
+  /v1/creneaux:
+    get:
+      tags: [Réservation]
+      operationId: listerCreneaux
+      security: []
+      summary: Créneaux de premier échange, libres ou pris, sur une période
+      description: |
+        Renvoie les créneaux des trois prochaines semaines au plus, en excluant les douze prochaines heures.
+        Les créneaux pris restent présents, avec `disponible: false`, pour être affichés désactivés.
+      parameters:
+        - name: du
+          in: query
+          required: false
+          description: Premier jour, au format AAAA-MM-JJ. Par défaut, aujourd'hui.
+          schema: { type: string, format: date }
+        - name: au
+          in: query
+          required: false
+          description: Dernier jour inclus, au format AAAA-MM-JJ. Au plus tard dans trois semaines.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Liste des créneaux.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ListeCreneaux' }
+        '400': { $ref: '#/components/responses/RequeteInvalide' }
+        '429': { $ref: '#/components/responses/TropDeRequetes' }
+
+  /v1/reservations:
+    post:
+      tags: [Réservation]
+      operationId: reserver
+      security: []
+      summary: Réserver un créneau
+      parameters:
+        - $ref: '#/components/parameters/CleIdempotence'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DemandeReservation' }
+      responses:
+        '201':
+          description: Réservation enregistrée ; l'e-mail de confirmation est envoyé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '409':
+          description: Le créneau vient d'être réservé, fermé ou n'est plus réservable.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
+              example:
+                type: https://horsfiltre.fr/erreurs/creneau-indisponible
+                title: Ce créneau vient d'être pris.
+                status: 409
+                code: creneau_indisponible
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+        '429': { $ref: '#/components/responses/TropDeRequetes' }
+
+  /v1/reservations/{id}:
+    get:
+      tags: [Gestion]
+      operationId: consulterReservation
+      security: [{ jetonGestion: [] }]
+      summary: Consulter sa réservation depuis le lien reçu par e-mail
+      parameters:
+        - $ref: '#/components/parameters/IdReservation'
+      responses:
+        '200':
+          description: La réservation.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '403': { $ref: '#/components/responses/JetonInvalide' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+
+  /v1/reservations/{id}/annulation:
+    post:
+      tags: [Gestion]
+      operationId: annulerReservation
+      security: [{ jetonGestion: [] }]
+      summary: Annuler sa réservation
+      description: Le créneau redevient libre immédiatement, et la liste d'attente est prévenue.
+      parameters:
+        - $ref: '#/components/parameters/IdReservation'
+      responses:
+        '200':
+          description: Réservation annulée ; un e-mail de confirmation est envoyé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '403': { $ref: '#/components/responses/JetonInvalide' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+        '409':
+          description: La réservation est déjà annulée ou passée.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
+
+  /v1/reservations/{id}/report:
+    post:
+      tags: [Gestion]
+      operationId: reporterReservation
+      security: [{ jetonGestion: [] }]
+      summary: Reporter sa réservation sur un autre créneau
+      description: L'ancien créneau n'est libéré qu'une fois le nouveau réservé, dans une même transaction.
+      parameters:
+        - $ref: '#/components/parameters/IdReservation'
+        - $ref: '#/components/parameters/CleIdempotence'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [creneauId]
+              properties:
+                creneauId: { $ref: '#/components/schemas/IdCreneau' }
+      responses:
+        '200':
+          description: Réservation reportée ; un e-mail de confirmation est envoyé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
+        '403': { $ref: '#/components/responses/JetonInvalide' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+        '409':
+          description: Le nouveau créneau n'est pas disponible.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
+
+  /v1/liste-attente:
+    post:
+      tags: [Réservation]
+      operationId: rejoindreListeAttente
+      security: []
+      summary: Être prévenu quand un créneau se libère
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DemandeListeAttente' }
+      responses:
+        '202': { description: Inscription enregistrée. }
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+        '429': { $ref: '#/components/responses/TropDeRequetes' }
+
+  /v1/admin/accompagnants:
+    get:
+      tags: [Administration]
+      operationId: listerAccompagnants
+      summary: Les accompagnants et leur lien de visio
+      security: [{ cognitoAdministration: [] }]
+      responses:
+        '200':
+          description: Liste des accompagnants.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Accompagnant' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+
+  /v1/admin/accompagnants/{accompagnantId}:
+    patch:
+      tags: [Administration]
+      operationId: modifierAccompagnant
+      summary: Modifier le lien de visio fixe d'un accompagnant
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdAccompagnant'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                lienVisio: { type: string, format: uri, pattern: '^https://meet\.google\.com/' }
+      responses:
+        '200':
+          description: Accompagnant modifié.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Accompagnant' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+
+  /v1/admin/regles:
+    get:
+      tags: [Administration]
+      operationId: listerRegles
+      summary: Règles de disponibilité récurrentes
+      security: [{ cognitoAdministration: [] }]
+      responses:
+        '200':
+          description: Liste des règles.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Regle' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+    post:
+      tags: [Administration]
+      operationId: creerRegle
+      summary: Créer une règle ; les créneaux des trois semaines à venir sont générés aussitôt
+      security: [{ cognitoAdministration: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DemandeRegle' }
+      responses:
+        '201':
+          description: Règle créée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Regle' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+
+  /v1/admin/regles/{regleId}:
+    put:
+      tags: [Administration]
+      operationId: remplacerRegle
+      summary: Modifier une règle ; seuls les créneaux libres à venir sont recalculés
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdRegle'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DemandeRegle' }
+      responses:
+        '200':
+          description: Règle modifiée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Regle' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+    delete:
+      tags: [Administration]
+      operationId: supprimerRegle
+      summary: Supprimer une règle ; ses créneaux libres à venir disparaissent, les réservations restent
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdRegle'
+      responses:
+        '204': { description: Règle supprimée. }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+
+  /v1/admin/absences:
+    get:
+      tags: [Administration]
+      operationId: listerAbsences
+      summary: Absences des accompagnants
+      security: [{ cognitoAdministration: [] }]
+      responses:
+        '200':
+          description: Liste des absences.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Absence' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+    post:
+      tags: [Administration]
+      operationId: creerAbsence
+      summary: Déclarer une absence ; les créneaux libres concernés sont fermés aussitôt
+      description: Les créneaux déjà réservés pendant l'absence sont signalés dans la réponse, sans être annulés automatiquement.
+      security: [{ cognitoAdministration: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/DemandeAbsence' }
+      responses:
+        '201':
+          description: Absence enregistrée.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [absence, reservationsConcernees]
+                properties:
+                  absence: { $ref: '#/components/schemas/Absence' }
+                  reservationsConcernees:
+                    type: array
+                    items: { $ref: '#/components/schemas/ReservationAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+
+  /v1/admin/absences/{absenceId}:
+    delete:
+      tags: [Administration]
+      operationId: supprimerAbsence
+      summary: Supprimer une absence ; les créneaux qu'elle fermait sont rouverts
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - name: absenceId
+          in: path
+          required: true
+          schema: { type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$' }
+      responses:
+        '204': { description: Absence supprimée. }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+
+  /v1/admin/creneaux:
+    get:
+      tags: [Administration]
+      operationId: listerCreneauxAdministration
+      summary: Tous les créneaux d'une période, avec leur statut et leur réservation
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - { name: du, in: query, required: true, schema: { type: string, format: date } }
+        - { name: au, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Créneaux de la période.
+          headers:
+            Cache-Control:
+              schema: { type: string, const: no-store }
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/CreneauAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+    post:
+      tags: [Administration]
+      operationId: creerCreneauPonctuel
+      summary: Ajouter un créneau ponctuel, hors règle
+      security: [{ cognitoAdministration: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [accompagnantId, debut]
+              properties:
+                accompagnantId: { $ref: '#/components/schemas/IdAccompagnant' }
+                debut: { type: string, format: date-time }
+      responses:
+        '201':
+          description: Créneau créé.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreneauAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '409':
+          description: Le créneau chevauche un créneau existant de cet accompagnant.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
+        '422': { $ref: '#/components/responses/DonneesInvalides' }
+
+  /v1/admin/creneaux/{creneauId}:
+    patch:
+      tags: [Administration]
+      operationId: modifierStatutCreneau
+      summary: Fermer ou rouvrir un créneau libre
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - name: creneauId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/IdCreneau' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [statut]
+              properties:
+                statut: { type: string, enum: [libre, ferme] }
+      responses:
+        '200':
+          description: Créneau modifié.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreneauAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+        '409':
+          description: Le créneau est réservé ; il faut d'abord annuler la réservation.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
+
+  /v1/admin/reservations:
+    get:
+      tags: [Administration]
+      operationId: listerReservations
+      summary: Réservations d'une période
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - { name: du, in: query, required: true, schema: { type: string, format: date } }
+        - { name: au, in: query, required: true, schema: { type: string, format: date } }
+      responses:
+        '200':
+          description: Réservations de la période.
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ReservationAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+
+  /v1/admin/reservations/{id}/annulation:
+    post:
+      tags: [Administration]
+      operationId: annulerReservationAdministration
+      summary: Annuler une réservation ; le candidat est prévenu par e-mail
+      security: [{ cognitoAdministration: [] }]
+      parameters:
+        - $ref: '#/components/parameters/IdReservation'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  minLength: 10
+                  maxLength: 500
+                  description: Message envoyé au candidat, avec une invitation à réserver un autre créneau.
+      responses:
+        '200':
+          description: Réservation annulée.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReservationAdministration' }
+        '401': { $ref: '#/components/responses/NonAuthentifie' }
+        '403': { $ref: '#/components/responses/Interdit' }
+        '404': { $ref: '#/components/responses/Introuvable' }
+
+components:
+  securitySchemes:
+    jetonGestion:
+      type: apiKey
+      in: query
+      name: jeton
+      description: Jeton signé reçu par e-mail, propre à une réservation, valable jusqu'à son début.
+    cognitoAdministration:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Jeton d'accès du pool Cognito d'administration (ADR-0005), vérifié par API Gateway ; la fonction vérifie en plus l'appartenance au groupe `administrateurs`.
+
+  parameters:
+    CleIdempotence:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: Identifiant unique de la tentative ; le même envoi répété ne crée jamais deux réservations.
+      schema: { type: string, format: uuid }
+    IdReservation:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$' }
+    IdAccompagnant:
+      name: accompagnantId
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/IdAccompagnant' }
+    IdRegle:
+      name: regleId
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[0-9A-HJKMNP-TV-Z]{26}$' }
+
+  responses:
+    RequeteInvalide:
+      description: Paramètres invalides.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+    DonneesInvalides:
+      description: Données invalides, champ par champ.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+          example:
+            type: https://horsfiltre.fr/erreurs/donnees-invalides
+            title: Certaines informations sont à corriger.
+            status: 422
+            code: donnees_invalides
+            erreurs:
+              email: Indiquez une adresse e-mail complète, par exemple prenom@exemple.fr.
+    TropDeRequetes:
+      description: Limite de débit atteinte.
+      headers:
+        Retry-After:
+          schema: { type: integer, minimum: 1 }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+    JetonInvalide:
+      description: Jeton de gestion absent, invalide ou expiré.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+    NonAuthentifie:
+      description: Jeton d'accès absent ou invalide.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+    Interdit:
+      description: L'utilisateur n'appartient pas au groupe des administrateurs.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+    Introuvable:
+      description: Ressource introuvable.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Probleme' }
+
+  schemas:
+    IdCreneau:
+      type: string
+      description: Identifiant opaque d'un créneau.
+      pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+    IdAccompagnant:
+      type: string
+      pattern: '^[a-z0-9-]{2,40}$'
+
+    Creneau:
+      type: object
+      additionalProperties: false
+      required: [id, debut, fin, disponible, accompagnant]
+      properties:
+        id: { $ref: '#/components/schemas/IdCreneau' }
+        debut: { type: string, format: date-time }
+        fin: { type: string, format: date-time }
+        disponible: { type: boolean }
+        accompagnant:
+          type: object
+          additionalProperties: false
+          required: [prenom]
+          properties:
+            prenom: { type: string }
+
+    ListeCreneaux:
+      type: object
+      additionalProperties: false
+      required: [fuseau, genereLe, creneaux]
+      properties:
+        fuseau: { type: string, const: Europe/Paris }
+        genereLe: { type: string, format: date-time }
+        creneaux:
+          type: array
+          items: { $ref: '#/components/schemas/Creneau' }
+
+    DemandeReservation:
+      type: object
+      additionalProperties: false
+      required: [creneauId, prenom, email, recherche, canal, fuseau, turnstile]
+      properties:
+        creneauId: { $ref: '#/components/schemas/IdCreneau' }
+        prenom: { type: string, minLength: 1, maxLength: 60 }
+        email: { type: string, format: email, maxLength: 120 }
+        recherche:
+          type: string
+          enum: [alternance, stage, cdi, cdd, freelance, orientation]
+        canal:
+          type: string
+          enum: [visio, whatsapp]
+        whatsapp:
+          type: [string, 'null']
+          description: Obligatoire si `canal` vaut `whatsapp`. De 8 à 15 chiffres, indicatif compris.
+          pattern: '^\+?[0-9]{8,15}$'
+        motivation:
+          type: [string, 'null']
+          maxLength: 500
+          description: Réponse facultative à « Qu'est-ce qui vous a décidé ? ».
+        fuseau:
+          type: string
+          maxLength: 64
+          description: Fuseau horaire du navigateur, pour écrire les heures locales dans les e-mails.
+        turnstile:
+          type: string
+          maxLength: 2048
+          description: Jeton Cloudflare Turnstile, vérifié côté serveur.
+
+    Reservation:
+      type: object
+      additionalProperties: false
+      required: [id, debut, fin, canal, statut, accompagnant]
+      properties:
+        id: { type: string }
+        debut: { type: string, format: date-time }
+        fin: { type: string, format: date-time }
+        canal: { type: string, enum: [visio, whatsapp] }
+        statut: { type: string, enum: [confirmee, annulee, passee] }
+        accompagnant:
+          type: object
+          additionalProperties: false
+          required: [prenom]
+          properties:
+            prenom: { type: string }
+
+    DemandeListeAttente:
+      type: object
+      additionalProperties: false
+      required: [prenom, email, recherche, turnstile]
+      properties:
+        prenom: { type: string, minLength: 1, maxLength: 60 }
+        email: { type: string, format: email, maxLength: 120 }
+        recherche:
+          type: string
+          enum: [alternance, stage, cdi, cdd, freelance, orientation]
+        turnstile: { type: string, maxLength: 2048 }
+
+    Accompagnant:
+      type: object
+      additionalProperties: false
+      required: [id, prenom, lienVisio]
+      properties:
+        id: { $ref: '#/components/schemas/IdAccompagnant' }
+        prenom: { type: string }
+        lienVisio:
+          type: [string, 'null']
+          format: uri
+
+    DemandeRegle:
+      type: object
+      additionalProperties: false
+      required: [accompagnantId, jour, debut, fin, valideDu]
+      properties:
+        accompagnantId: { $ref: '#/components/schemas/IdAccompagnant' }
+        jour:
+          type: string
+          enum: [lundi, mardi, mercredi, jeudi, vendredi, samedi, dimanche]
+        debut:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Heure de début de la plage, heure de Paris.
+        fin:
+          type: string
+          pattern: '^([01][0-9]|2[0-3]):[0-5][0-9]$'
+          description: Heure de fin de la plage ; le dernier échange se termine au plus tard à cette heure.
+        valideDu: { type: string, format: date }
+        valideAu: { type: [string, 'null'], format: date }
+
+    Regle:
+      allOf:
+        - $ref: '#/components/schemas/DemandeRegle'
+        - type: object
+          required: [id, dureeMinutes, pauseMinutes]
+          properties:
+            id: { type: string }
+            dureeMinutes: { type: integer, const: 30 }
+            pauseMinutes: { type: integer, const: 15 }
+
+    DemandeAbsence:
+      type: object
+      additionalProperties: false
+      required: [accompagnantId, du, au]
+      properties:
+        accompagnantId: { $ref: '#/components/schemas/IdAccompagnant' }
+        du: { type: string, format: date-time }
+        au: { type: string, format: date-time }
+        motif: { type: [string, 'null'], maxLength: 200 }
+
+    Absence:
+      allOf:
+        - $ref: '#/components/schemas/DemandeAbsence'
+        - type: object
+          required: [id]
+          properties:
+            id: { type: string }
+
+    CreneauAdministration:
+      type: object
+      additionalProperties: false
+      required: [id, debut, fin, statut, accompagnantId, origine]
+      properties:
+        id: { $ref: '#/components/schemas/IdCreneau' }
+        debut: { type: string, format: date-time }
+        fin: { type: string, format: date-time }
+        statut: { type: string, enum: [libre, reserve, ferme, passe] }
+        accompagnantId: { $ref: '#/components/schemas/IdAccompagnant' }
+        origine:
+          type: string
+          enum: [regle, ponctuel]
+        regleId: { type: [string, 'null'] }
+        reservationId: { type: [string, 'null'] }
+
+    ReservationAdministration:
+      type: object
+      additionalProperties: false
+      required: [id, debut, fin, canal, statut, accompagnantId, prenom, email, recherche, creeeLe]
+      properties:
+        id: { type: string }
+        debut: { type: string, format: date-time }
+        fin: { type: string, format: date-time }
+        canal: { type: string, enum: [visio, whatsapp] }
+        statut: { type: string, enum: [confirmee, annulee, passee] }
+        accompagnantId: { $ref: '#/components/schemas/IdAccompagnant' }
+        prenom: { type: string }
+        email: { type: string, format: email }
+        whatsapp: { type: [string, 'null'] }
+        recherche: { type: string, enum: [alternance, stage, cdi, cdd, freelance, orientation] }
+        motivation: { type: [string, 'null'] }
+        creeeLe: { type: string, format: date-time }
+
+    Probleme:
+      type: object
+      description: Format « problem details » (RFC 9457).
+      required: [type, title, status, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        code: { type: string }
+        detail: { type: string }
+        erreurs:
+          type: object
+          description: Message par champ, à afficher sous le champ concerné.
+          additionalProperties: { type: string }
