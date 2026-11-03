@@ -22,3 +22,9 @@ npm-debug.log*
 # Sources internes du projet : décisions, études, documents juridiques.
 # Le dépôt est public : elles restent sur le poste et dans un stockage privé.
 docs/sources/
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
