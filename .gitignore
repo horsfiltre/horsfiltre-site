@@ -1,7 +1,7 @@
 # Dépendances et caches
 node_modules/
 .wrangler/
-.lighthouseci/
+.lighthouse/
 
 # Secrets — ne jamais versionner
 .env
@@ -18,3 +18,7 @@ desktop.ini
 # Journaux
 *.log
 npm-debug.log*
+
+# Sources internes du projet : décisions, études, documents juridiques.
+# Le dépôt est public : elles restent sur le poste et dans un stockage privé.
+docs/sources/

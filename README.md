@@ -15,7 +15,8 @@ public/                  Fichiers publiés tels quels
   dependabot.yml         Mises à jour des dépendances
   CODEOWNERS             Relecture obligatoire
 docs/adr/                Décisions d'architecture
-lighthouserc.json        Seuils de performance et d'accessibilité
+lighthouse.budgets.json  Seuils de performance et d'accessibilité
+scripts/lighthouse.mjs   Contrôle Lighthouse : trois passages, médiane, seuils
 .htmlvalidate.json       Règles de validation HTML
 ```
 
@@ -26,7 +27,7 @@ Prérequis : Node.js 22 (voir `.nvmrc`).
 ```bash
 npm ci
 npm run lint:html     # validation HTML
-npm run lhci          # performance, accessibilité, SEO
+npm run lighthouse    # performance, accessibilité, SEO
 npm run dev           # aperçu local avec les en-têtes de production
 ```
 
