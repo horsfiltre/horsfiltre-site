@@ -33,4 +33,12 @@ export function identifiantCreneau(accompagnantId: string, debutIso: string): st
   return base32(createHash('sha256').update(`${accompagnantId}|${debutIso}`).digest(), 26);
 }
 
+/**
+ * Identifiant d'une réservation déduit de la clé d'idempotence du visiteur : rejouer la même demande retombe sur
+ * la même réservation, au lieu d'en créer une seconde.
+ */
+export function identifiantDepuisCle(cleIdempotence: string): string {
+  return base32(createHash('sha256').update(`idempotence|${cleIdempotence}`).digest(), 26);
+}
+
 export const FORMAT_IDENTIFIANT = /^[0-9A-HJKMNP-TV-Z]{26}$/;

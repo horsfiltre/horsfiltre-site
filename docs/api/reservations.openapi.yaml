@@ -80,8 +80,20 @@ paths:
           content:
             application/json:
               schema: { $ref: '#/components/schemas/Reservation' }
+        '200':
+          description: >-
+            La même demande a déjà été traitée (même `Idempotency-Key`, même créneau, même adresse) : la réservation
+            existante est rendue, sans nouvelle vérification anti-robot et sans second e-mail. L'en-tête
+            `Idempotent-Replayed: true` l'indique.
+          headers:
+            Idempotent-Replayed: { schema: { type: string, enum: ['true'] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Reservation' }
         '409':
-          description: Le créneau vient d'être réservé, fermé ou n'est plus réservable.
+          description: >-
+            Le créneau vient d'être réservé, fermé ou n'est plus réservable (`creneau_indisponible`), ou cette adresse
+            a déjà une réservation active (`trop_de_reservations`).
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Probleme' }
@@ -90,8 +102,23 @@ paths:
                 title: Ce créneau vient d'être pris.
                 status: 409
                 code: creneau_indisponible
-        '422': { $ref: '#/components/responses/DonneesInvalides' }
+        '422':
+          description: >-
+            Un champ est invalide (`donnees_invalides`, avec `erreurs` : un message par champ), ou la vérification
+            anti-robot a échoué (`turnstile_invalide`, `erreurs.turnstile`).
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
         '429': { $ref: '#/components/responses/TropDeRequetes' }
+        '503':
+          description: >-
+            La vérification anti-robot est momentanément indisponible (`verification_indisponible`). L'en-tête
+            `Retry-After` donne un délai en secondes ; la demande peut être renvoyée telle quelle.
+          headers:
+            Retry-After: { schema: { type: integer } }
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Probleme' }
 
   /v1/reservations/{id}:
     get:
