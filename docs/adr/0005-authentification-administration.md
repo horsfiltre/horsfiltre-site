@@ -1,6 +1,6 @@
 # ADR-0005 — Authentification de l'administration au 17 novembre
 
-Statut : proposée
+Statut : acceptée le 3 novembre 2026
 Date : 2026-11-02
 Décideur : Ilyas Laarif, pour l'équipe Hors Filtre
 Cadre : ADR-0003, loi 4.6 du prompt maître, décision Q1 de l'équipe du 2 novembre
