@@ -1,10 +1,9 @@
 # En-têtes appliqués par Cloudflare Pages à chaque réponse.
 # Référence : chapitre 9 du document d'architecture.
 #
-# 'unsafe-inline' est toléré temporairement : la page actuelle contient
-# du CSS et du JavaScript intégrés. À retirer dès que le code sera
-# externalisé dans des fichiers séparés.
-# Les polices sont hébergées sur le site (public/fonts/) : plus aucune requête vers Google (RGPD).
+# Depuis la refonte, le CSS et le JavaScript sont dans des fichiers séparés
+# et les polices sont hébergées ici : 'unsafe-inline' a été retiré, et plus
+# aucune requête ne part vers Google (conformité RGPD).
 #
 # HSTS, par paliers : le tableau de bord de Cloudflare n'offre pas moins d'un mois, donc l'en-tête est ici.
 # 1) 3 novembre 2026 : 1 jour (86400). 2) puis 1 semaine, 3) 1 mois, 4) 6 mois, une étape à la fois.
@@ -12,7 +11,7 @@
 # preload : jamais avant 1 an de max-age sans incident, et c'est une décision à sens unique.
 
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin
@@ -22,6 +21,9 @@
 
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+/site.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
 
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
