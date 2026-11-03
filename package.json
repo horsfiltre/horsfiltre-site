@@ -11,9 +11,12 @@
     "lighthouse": "node scripts/lighthouse.mjs",
     "dev": "wrangler pages dev public",
     "check": "npm run lint:html && npm test",
-    "test": "node --test \"shared/test/*.test.mts\""
+    "test": "node --test \"shared/test/*.test.mts\" \"api/test/*.test.mts\"",
+    "test:integration": "node --test \"api/test-integration/*.integration.mts\""
   },
   "devDependencies": {
+    "@aws-sdk/client-dynamodb": "3.1153.0",
+    "@aws-sdk/lib-dynamodb": "3.1153.0",
     "chrome-launcher": "1.2.2",
     "html-validate": "11.17.0",
     "lighthouse": "13.5.0",
