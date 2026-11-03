@@ -31,6 +31,28 @@ npm.cmd run test:integration
 
 Résultat attendu : `# tests 12`, `# pass 12`, `# fail 0`.
 
+## Amorcer les accompagnants
+
+Les associés ne se créent pas par l'API : un script les écrit dans la table, à partir d'un **fichier qui reste sur votre poste**. Les liens de visioconférence n'entrent donc jamais dans le dépôt ni dans une conversation. Le dossier `docs/sources/` est ignoré par Git.
+
+Une ligne par accompagnant, dans `docs/sources/accompagnants.txt` :
+
+```text
+# identifiant : Prénom : lien Meet fixe
+ilyas : Ilyas : https://meet.google.com/xxx-xxxx-xxx
+```
+
+L'identifiant est court, en minuscules, sans espace ni accent. Il ne change plus ensuite : les règles et les créneaux s'y rattachent.
+
+```powershell
+$env:AWS_PROFILE = "horsfiltre-prod"
+$env:TABLE_NAME = "preprod-horsfiltre"
+node api\scripts\amorcer-accompagnants.mts              # simulation : n'écrit rien
+node api\scripts\amorcer-accompagnants.mts --appliquer  # écrit
+```
+
+Le script est **idempotent** : relancé avec le même fichier, il affiche « inchangé ». Il montre les liens **masqués** (`https://meet.google.com/abc-****-***`), refuse tout fichier qui contient une erreur sans rien écrire, et refuse une table de production sans l'option `--production`.
+
 ## Ajouter une dépendance
 
 Les dépendances **indirectes** comptent pour la règle des quatorze jours : un kit comme celui d'AWS publie tous ses modules en même temps, et npm choisit tout seul la dernière version de chacun. On résout donc comme à une date donnée, celle d'il y a quatorze jours :
