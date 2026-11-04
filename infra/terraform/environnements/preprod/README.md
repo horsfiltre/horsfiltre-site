@@ -1,27 +1,97 @@
 # Préproduction provisoire
 
-Table de données de la préproduction, **dans le compte de production**, en attendant que le quota de comptes AWS permette de créer `horsfiltre-preprod` (ADR-0008). Toutes ses ressources portent le préfixe `preprod-` et l'étiquette `environnement = preprod`.
+Données, identité des administrateurs et API de la préproduction, **dans le compte de production** (ADR-0008). Toutes les ressources portent le préfixe `preprod-` et l'étiquette `environnement = preprod`. Elle ne contient que des données d'essai : **aucune vraie donnée de candidat n'y est jamais écrite.**
 
-Elle ne contient que des données d'essai. **Aucune vraie donnée de candidat n'y est jamais écrite.**
+## Ce qu'elle crée
 
-## Commandes
+| Module | Ressources | Rôle |
+| --- | --- | --- |
+| `donnees` | 1 | la table DynamoDB (déjà créée) |
+| `identite` | 4 | pool Cognito des administrateurs, groupe `administrateurs`, page de connexion, client de l'interface |
+| `api` | 21 | fonction Lambda et ses droits minimaux, API Gateway (11 routes), autorisation JWT, limites de débit, journaux |
+
+Un plan sur une table déjà créée annonce donc **25 ressources à créer**.
+
+## Avant le plan
+
+**1. Construire la fonction.** Terraform déploie l'archive `dist/api.zip`, qui n'existe pas dans le dépôt.
 
 ```powershell
-Copy-Item infra\terraform\amorcage\prod\.terraform.lock.hcl infra\terraform\environnements\preprod\
+npm.cmd run construire:api
+```
+
+**2. Créer les deux secrets.** Un secret ne passe **jamais** par Terraform : il se créerait dans l'état. Les deux paramètres se créent à la main, avec l'accès nominatif, avant le premier déploiement.
+
+Secret de signature des liens d'annulation, 48 octets aléatoires qui ne s'affichent jamais :
+
+```powershell
+$octets = New-Object byte[] 48
+[Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($octets)
+$secret = [Convert]::ToBase64String($octets)
+aws ssm put-parameter --name /horsfiltre/preprod/jeton-secret --type SecureString --value $secret
+Remove-Variable secret, octets
+```
+
+Clé secrète Turnstile du widget des aperçus, depuis Bitwarden (la saisie ne s'affiche pas) :
+
+```powershell
+$saisie = Read-Host "Clé secrète Turnstile (horsfiltre-apercus)" -AsSecureString
+$secret = [Runtime.InteropServices.Marshal]::PtrToStringAuto([Runtime.InteropServices.Marshal]::SecureStringToBSTR($saisie))
+aws ssm put-parameter --name /horsfiltre/preprod/turnstile-secret --type SecureString --value $secret
+Remove-Variable saisie, secret
+```
+
+Chaque commande répond par un numéro de version et le niveau `Standard`. Une fonction dont l'un des deux secrets manque **refuse de démarrer** et répond une erreur générique : c'est voulu.
+
+## Le plan
+
+```powershell
 $env:AWS_PROFILE = "horsfiltre-prod"
 cd infra\terraform\environnements\preprod
-
 terraform init
 terraform validate
 terraform plan -out preprod.tfplan
-# relire le plan, puis seulement :
-terraform apply preprod.tfplan
 ```
 
-## Ce que le plan doit annoncer
+Il doit annoncer **25 to add, 0 to change, 0 to destroy**. Relire le plan, puis seulement : `terraform apply preprod.tfplan`.
 
-**Une seule ressource à créer**, aucune à modifier ni à détruire : `module.donnees.aws_dynamodb_table.principale`, nommée `preprod-horsfiltre`, avec trois index (`GSI2`, `GSI3`, `GSI5`), la restauration à un instant donné et la suppression automatique à l'échéance.
+Le préfixe de l'adresse de connexion (`horsfiltre-admin-preprod`) est unique dans la région : si un autre compte l'a pris, l'`apply` échoue sur le domaine Cognito, et il suffit de changer ce préfixe dans `main.tf`.
+
+## Après l'apply : les comptes des administrateurs
+
+Les adresses e-mail des associés sont des données personnelles : **elles ne figurent jamais dans le dépôt ni dans Terraform**. Les comptes se créent à la main, un par associé :
+
+```powershell
+$pool = terraform output -raw id_pool
+aws cognito-idp admin-create-user --user-pool-id $pool --username prenom@exemple.fr --user-attributes Name=email,Value=prenom@exemple.fr Name=email_verified,Value=true --desired-delivery-mediums EMAIL
+aws cognito-idp admin-add-user-to-group --user-pool-id $pool --username prenom@exemple.fr --group-name administrateurs
+```
+
+L'associé reçoit un e-mail avec un mot de passe temporaire (valable 3 jours). À sa première connexion, il choisit un mot de passe d'**au moins 14 caractères** et configure son application d'authentification : la double authentification est obligatoire, à chaque connexion.
+
+## Tester la chaîne réelle
+
+Vérifications qui ne demandent aucune connexion :
+
+```powershell
+$api = terraform output -raw adresse_api
+curl.exe -i "$api/v1/creneaux"                                            # 200 : route publique
+curl.exe -i "$api/v1/admin/accompagnants"                                  # 401 : refusé par API Gateway, sans jeton
+curl.exe -i -H "Authorization: Bearer faux" "$api/v1/admin/accompagnants"  # 401 : un faux jeton ne passe pas
+```
+
+Connexion réelle, avec la double authentification, puis un appel d'administration. Le jeton n'est jamais affiché :
+
+```powershell
+$env:COGNITO_ADRESSE = terraform output -raw adresse_connexion
+$env:COGNITO_CLIENT  = terraform output -raw id_client
+$env:API_ADRESSE     = terraform output -raw adresse_api
+cd ..\..\..\..
+node api\scripts\appeler-administration.mts GET /v1/admin/accompagnants
+```
+
+Le script affiche une adresse : l'ouvrir dans le navigateur, se connecter, puis revenir au terminal. Il doit afficher « Groupes : administrateurs » et la liste des accompagnants (code 200).
 
 ## Retirer cette préproduction
 
-Quand le compte `horsfiltre-preprod` existe : y recréer les mêmes ressources, basculer, puis ici `terraform destroy`. La protection contre la suppression est désactivée, donc la commande fonctionne directement.
+Quand le compte `horsfiltre-preprod` existe : y recréer les mêmes ressources, basculer, puis ici `terraform destroy`. Aucune protection contre la suppression n'est active.

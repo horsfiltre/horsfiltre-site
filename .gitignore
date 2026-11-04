@@ -28,3 +28,6 @@ docs/sources/
 *.tfstate
 *.tfstate.*
 *.tfplan
+
+# Sorties de construction
+dist/
