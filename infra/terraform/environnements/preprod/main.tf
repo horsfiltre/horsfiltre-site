@@ -22,8 +22,14 @@ module "identite" {
   prefixe           = "preprod-"
   domaine_connexion = "horsfiltre-admin-preprod"
 
-  # `localhost:8788` sert à l'outil de test (api/scripts/appeler-administration.mts) et au développement local de l'interface.
-  urls_retour      = ["https://${local.administration_pages}/connexion", "http://localhost:8788/connexion"]
+  # L'interface revient à la racine du site. Les adresses `localhost:8788` ne servent qu'en préproduction : le développement
+  # local de l'interface (npm run admin:dev) et l'outil de test (api/scripts/appeler-administration.mts, qui écoute /connexion).
+  # À RETIRER dans la pile de production.
+  urls_retour = [
+    "https://${local.administration_pages}/",
+    "http://localhost:8788/",
+    "http://localhost:8788/connexion",
+  ]
   urls_deconnexion = ["https://${local.administration_pages}/", "http://localhost:8788/"]
 
   protection_suppression = false
@@ -40,7 +46,8 @@ module "api" {
 
   # Aperçus du site public (previews Cloudflare Pages), et interface d'administration et ses aperçus.
   origines_publiques      = ["https://*.horsfiltre.pages.dev"]
-  origines_administration = ["https://${local.administration_pages}", "https://*.${local.administration_pages}"]
+  # `http://localhost:8788` : l'interface lancée sur le poste d'un administrateur (npm run admin:dev). À RETIRER en production.
+  origines_administration = ["https://${local.administration_pages}", "https://*.${local.administration_pages}", "http://localhost:8788"]
 
   # Les aperçus ont des noms d'hôte variables : pas de contrôle du nom d'hôte du jeton Turnstile en préproduction.
   hotes_turnstile = []

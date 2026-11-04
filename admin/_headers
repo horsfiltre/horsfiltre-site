@@ -1,0 +1,13 @@
+# En-têtes de l'interface d'administration (projet Cloudflare Pages distinct du site public, ADR-0005).
+# Politique stricte : aucun script ni style intégré, aucune ressource externe. `connect-src` ne nomme que l'API et la page de
+# connexion Cognito de CET environnement : à changer avec admin/config.json quand l'administration passera en production.
+
+/*
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://pf1k43c6r3.execute-api.eu-west-3.amazonaws.com https://horsfiltre-admin-preprod.auth.eu-west-3.amazoncognito.com; form-action 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+  X-Robots-Tag: noindex, nofollow
+  Cache-Control: no-store
