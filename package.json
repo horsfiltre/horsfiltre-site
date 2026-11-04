@@ -11,7 +11,7 @@
     "lighthouse": "node scripts/lighthouse.mjs",
     "dev": "wrangler pages dev public",
     "check": "npm run lint:html && npm test",
-    "test": "node --test \"shared/test/*.test.mts\" \"api/test/*.test.mts\" \"admin/test/*.test.mjs\"",
+    "test": "node --test \"shared/test/*.test.mts\" \"api/test/*.test.mts\" \"admin/test/*.test.mjs\" \"tests/public/*.test.mjs\"",
     "test:integration": "node --test \"api/test-integration/*.integration.mts\"",
     "construire:api": "node scripts/construire-api.mjs",
     "admin:dev": "wrangler pages dev admin --port 8788"

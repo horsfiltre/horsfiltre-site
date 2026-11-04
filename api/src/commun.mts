@@ -88,7 +88,9 @@ export function motifOrigine(motif: string): RegExp {
 
 export function enTetesCors(origine: string | undefined, autorisees: readonly string[]): Record<string, string> {
   if (!origine || !autorisees.some((m) => motifOrigine(m).test(origine))) return {};
-  return { 'access-control-allow-origin': origine, vary: 'Origin' };
+  // Sans cette liste, un navigateur ne laisse pas la page lire ces en-têtes : elle ne saurait ni quand réessayer après
+  // un 503, ni qu'une réservation rejouée est la même.
+  return { 'access-control-allow-origin': origine, 'access-control-expose-headers': 'retry-after, idempotent-replayed', vary: 'Origin' };
 }
 
 // ------------------------------------------------------------------------------------------------ routes

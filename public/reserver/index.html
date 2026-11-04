@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Réserver un échange gratuit — Hors Filtre</title>
+<meta name="description" content="Trente minutes pour faire le point sur votre recherche, en visio ou sur WhatsApp. Gratuit et sans engagement.">
+<meta name="theme-color" content="#FFFFFF">
+<meta property="og:title" content="Réserver un échange gratuit — Hors Filtre">
+<meta property="og:description" content="Trente minutes pour faire le point sur votre recherche, en visio ou sur WhatsApp. Gratuit et sans engagement.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://horsfiltre.fr/reserver/">
+<meta property="og:image" content="https://horsfiltre.fr/og-image-1200x630.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://horsfiltre.fr/reserver/">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="hf-whatsapp" content="">
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/hf.css">
+<link rel="stylesheet" href="/assets/css/reserver.css">
+<script src="/assets/js/hf.js" defer></script>
+<script type="module" src="/assets/js/reserver.js"></script>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="logo" href="/" aria-label="Hors Filtre, accueil"><img src="/assets/logo/horsfiltre-logo-horizontal.svg" alt="" width="665" height="148"></a>
+    <nav class="nav" aria-label="Navigation principale">
+      <ul class="nav-links" id="menu"><li><a href="/methode/">Méthode</a></li><li><a href="/histoires/">Histoires</a></li><li><a href="/tarifs/">Tarifs</a></li><li><a href="/parents/">Parents</a></li></ul>
+      <a class="btn btn-primary btn-s" href="/reserver/" data-perso-lien>Réserver</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu"><span></span><span class="visually-hidden">Menu</span></button>
+    </nav>
+  </div>
+</header>
+<main id="contenu">
+<div class="demo-banner" hidden>Démonstration : créneaux et prénoms fictifs, rien n’est envoyé. Prénoms d’essai : « Pris », « Lent », « Erreur ».</div>
+<section class="resa" aria-labelledby="t-resa">
+  <div class="wrap resa-grille">
+    <div class="resa-intro">
+      <p class="eyebrow">Premier échange</p>
+      <h1 class="h-page" id="t-resa">Réserver un échange gratuit</h1>
+      <p class="lede">Trente minutes pour faire le point sur votre recherche, en visio ou sur WhatsApp. Gratuit et sans engagement.</p>
+      <div class="notice notice-ok diag" data-diagnostic hidden>
+        <p>Votre test du filtre : <strong data-diag-score></strong>. Votre accompagnant peut en partir.</p>
+        <button class="btn btn-secondary btn-s" type="button">Ajouter mon résultat à mon message</button>
+      </div>
+      <h2 class="resa-h">Vos trente minutes</h2>
+      <ol class="agenda-mini">
+        <li><span>5 min</span>Votre recherche, votre date limite.</li>
+        <li><span>10 min</span>Votre CV, lu comme un recruteur pressé.</li>
+        <li><span>10 min</span>Les offres qui vous plaisent.</li>
+        <li><span>5 min</span>Vos trois prochaines actions.</li>
+      </ol>
+      <ul class="sq-list resa-plus">
+        <li>Avec un des quatre associés de Hors Filtre, qui sera aussi votre accompagnant.</li>
+        <li>Un parent peut se joindre à vous, si vous le souhaitez.</li>
+        <li>Un rappel par e-mail la veille, et un autre une heure avant.</li>
+      </ul>
+      <p class="small muted resa-aide">Une question avant de réserver ? <a href="/questions/#whatsapp">Écrivez-nous sur WhatsApp</a> ou à <a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a>.</p>
+    </div>
+
+    <form class="card resa-form" id="resa" novalidate>
+      <div class="err-summary" tabindex="-1" hidden><h2>Il manque quelques informations</h2><ul></ul></div>
+      <div data-agenda>
+        <fieldset class="etape">
+          <legend><span class="n" aria-hidden="true">1</span>Choisissez un jour</legend>
+          <p class="statut small" data-statut hidden></p>
+          <div class="jours" data-jours></div>
+        </fieldset>
+        <fieldset class="etape">
+          <legend><span class="n" aria-hidden="true">2</span>Choisissez une heure</legend>
+          <p class="small muted"><span data-jour-titre></span> · heure de Paris</p>
+          <div class="heures" data-heures></div>
+          <p class="err" id="err-creneau" role="alert"></p>
+        </fieldset>
+      </div>
+      <div class="notice notice-ko" data-erreur-agenda hidden><p>Les créneaux n’ont pas pu être chargés. <button class="lien" type="button" data-recharger>Réessayer</button> ou écrivez-nous : <a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a>.</p></div>
+
+      <fieldset class="etape" data-coordonnees>
+        <legend><span class="n" aria-hidden="true">3</span>Vos coordonnées</legend>
+        <div class="field"><label for="prenom">Prénom</label><input type="text" class="input" id="prenom" name="prenom" autocomplete="given-name" maxlength="60" aria-describedby="err-prenom"><p class="err" id="err-prenom" role="alert"></p></div>
+        <div class="field"><label for="email">E-mail</label><p class="hint" id="aide-email">Pour la confirmation, et les rappels.</p><input class="input" id="email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="120" aria-describedby="aide-email err-email"><p class="err" id="err-email" role="alert"></p></div>
+        <fieldset class="choices choices-row">
+          <legend>Ce que vous cherchez</legend>
+          <label class="choice"><input type="radio" name="recherche" value="alternance"><span class="box">Une alternance</span></label>
+          <label class="choice"><input type="radio" name="recherche" value="stage"><span class="box">Un stage</span></label>
+          <label class="choice"><input type="radio" name="recherche" value="cdi"><span class="box">Un CDI</span></label>
+          <label class="choice"><input type="radio" name="recherche" value="cdd"><span class="box">Un CDD</span></label>
+          <label class="choice"><input type="radio" name="recherche" value="freelance"><span class="box">Une première mission en freelance</span></label>
+          <label class="choice"><input type="radio" name="recherche" value="orientation"><span class="box">Une orientation</span></label>
+          <p class="err" id="err-recherche" role="alert"></p>
+        </fieldset>
+        <fieldset class="choices choices-row">
+          <legend>L’échange se fait</legend>
+          <label class="choice"><input type="radio" name="canal" value="visio" checked><span class="box"><strong>En visio</strong><small>Google Meet, depuis votre navigateur</small></span></label>
+          <label class="choice"><input type="radio" name="canal" value="whatsapp"><span class="box"><strong>Sur WhatsApp</strong><small>On vous appelle à l’heure dite</small></span></label>
+          <p class="err" id="err-canal" role="alert"></p>
+        </fieldset>
+        <div class="field" data-whatsapp-champ hidden><label for="whatsapp">Votre numéro WhatsApp</label><input class="input" id="whatsapp" name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" aria-describedby="err-whatsapp"><p class="err" id="err-whatsapp" role="alert"></p></div>
+        <div class="field"><label for="motivation">Qu’est-ce qui vous a décidé ? <span class="opt">(facultatif)</span></label><textarea class="textarea" id="motivation" name="motivation" maxlength="500" rows="3" aria-describedby="compteur err-motivation"></textarea><p class="hint" id="compteur" data-compteur aria-live="polite"></p><p class="err" id="err-motivation" role="alert"></p></div>
+        <div class="hp" aria-hidden="true"><label for="site-web">Laissez ce champ vide</label><input type="text" id="site-web" name="site-web" tabindex="-1" autocomplete="off"></div>
+        <div id="turnstile" class="turnstile"></div>
+      </fieldset>
+
+      <div class="recap" data-recap hidden><span class="sq" aria-hidden="true"></span><p><strong data-recap-quand></strong><span data-recap-qui></span></p></div>
+      <p class="small muted">Vos informations servent uniquement à organiser cet échange. <a href="/confidentialite/">Politique de confidentialité</a></p>
+      <p class="notice" id="resa-statut" role="status" hidden></p>
+      <button class="btn btn-primary btn-wide" type="submit">Réserver l’échange</button>
+      <p class="small muted center">Vous pourrez annuler ou reporter à tout moment depuis l’e-mail de confirmation.</p>
+    </form>
+
+    <div class="card attente" data-complet hidden>
+      <h2>Tous les échanges des trois prochaines semaines sont réservés.</h2>
+      <p>De nouveaux créneaux s’ouvrent chaque semaine : revenez dans quelques jours, ou écrivez-nous à <a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a>.</p>
+    </div>
+    <div class="card attente" data-ferme hidden>
+      <h2>La réservation en ligne ouvre très bientôt.</h2>
+      <p>En attendant, écrivez-nous à <a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a> : nous vous proposerons un créneau.</p>
+    </div>
+  </div>
+</section>
+<div class="sticky-bar" hidden><p><span class="sq" aria-hidden="true"></span><strong data-barre-quand></strong></p><button class="btn btn-primary btn-s" type="button" data-barre-action>Continuer</button></div>
+
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <a class="foot-logo" href="/" aria-label="Hors Filtre, accueil"><img src="/assets/logo/horsfiltre-logo-horizontal-inverse.svg" alt="" width="665" height="148"></a>
+        <p>Un accompagnement humain vers l’alternance, le stage et le premier emploi, jusqu’à la signature.</p>
+        <p><a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a><br><a href="/questions/" data-whatsapp>WhatsApp : <span class="todo">[À FOURNIR : numéro WhatsApp Business]</span></a></p>
+      </div>
+      <nav aria-labelledby="pied-1"><h2 id="pied-1">Comprendre</h2><ul>
+        <li><a href="/methode/">La méthode</a></li><li><a href="/histoires/">Histoires</a></li><li><a href="/tarifs/">Tarifs</a></li>
+        <li><a href="/test/">Le test du filtre</a></li><li><a href="/ressources/">Ressources</a></li><li><a href="/chiffres/">Comment on compte nos chiffres</a></li></ul></nav>
+      <nav aria-labelledby="pied-2"><h2 id="pied-2">Se rassurer</h2><ul>
+        <li><a href="/parents/">Vous êtes parent ?</a></li><li><a href="/equipe/">L’équipe</a></li><li><a href="/questions/">Questions</a></li>
+        <li><a href="/verifier/">Vérifiez-nous</a></li><li><a href="/reserver/">Réserver un échange</a></li><li><a href="/coulisses/">Les Coulisses</a></li></ul></nav>
+      <nav aria-labelledby="pied-3"><h2 id="pied-3">Informations</h2><ul>
+        <li><a href="/mentions-legales/">Mentions légales</a></li><li><a href="/cgv/">Conditions générales</a></li><li><a href="/confidentialite/">Confidentialité</a></li>
+        <li><a href="/cookies/">Cookies</a></li><li><a href="/accessibilite/">Accessibilité : partiellement conforme</a></li><li><a href="/plan-du-site/">Plan du site</a></li></ul></nav>
+    </div>
+    <div class="foot-legal">
+      <p>© <span data-annee>2026</span> Hors Filtre · SIRET <span class="todo">[À FOURNIR]</span> · Médiateur de la consommation : <span class="todo">[À FOURNIR]</span></p>
+      <button class="toggle-motion" type="button" aria-pressed="false"><i aria-hidden="true"></i>Réduire les animations</button>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

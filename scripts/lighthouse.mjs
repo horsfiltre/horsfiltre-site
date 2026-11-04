@@ -134,12 +134,16 @@ try {
     const nom = page.replace(/^\//, '').replace(/[\/.]/g, '_');
     await writeFile(join(SORTIE, `${nom}.html`), rapportMedian.report);
 
+    // Une page volontairement exclue des moteurs (meta robots noindex : confirmation, lien de gestion) échoue par
+    // construction au critère « is-crawlable » : son référencement est mesuré et affiché, mais il ne bloque pas.
+    const exclueDesMoteurs = /<meta\s+name="robots"\s+content="[^"]*noindex/i.test(await readFile(join(RACINE, page), 'utf8'));
     const ligne = { page };
     for (const [cle, regle] of Object.entries(budgets.seuils)) {
       const m = mediane(mesures[cle]);
       const ok = regle.min !== undefined ? m >= regle.min : m <= regle.max;
-      ligne[cle] = { mediane: m, passages: mesures[cle], seuil: regle.min ?? regle.max, ok, informatif: !!regle.informatif };
-      if (!ok && !regle.informatif) echec = true;
+      const informatif = !!regle.informatif || (exclueDesMoteurs && regle.categorie === 'seo');
+      ligne[cle] = { mediane: m, passages: mesures[cle], seuil: regle.min ?? regle.max, ok, informatif };
+      if (!ok && !informatif) echec = true;
     }
     resultats.push(ligne);
   }

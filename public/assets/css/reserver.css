@@ -1,0 +1,99 @@
+/* Réserver, confirmation, annuler ou reporter */
+.resa{padding:clamp(24px,4vw,56px) 0 clamp(64px,8vw,104px)}
+.resa-grille{display:grid;gap:clamp(24px,4vw,56px);grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);align-items:start}
+@media (max-width:900px){.resa-grille{grid-template-columns:minmax(0,1fr)}}
+.resa-intro .lede{margin-top:16px}
+.resa-h{font-size:22px;margin:30px 0 12px}
+.agenda-mini{list-style:none;display:grid;gap:8px;padding:0;margin:0}
+.agenda-mini li{display:grid;grid-template-columns:64px 1fr;gap:12px;align-items:baseline;padding:10px 14px;border-radius:12px;background:var(--mist);font-size:15px}
+.agenda-mini span{font-weight:700;font-variant-numeric:tabular-nums;color:var(--violet-ink)}
+.resa-plus{margin-top:20px;font-size:15px}
+.diag{margin-top:20px;flex-wrap:wrap;align-items:center}
+.diag p{flex:1 1 220px}
+@media (min-width:901px){.resa-intro{position:sticky;top:calc(var(--head) + 24px)}}
+@media (max-width:900px){.resa-h,.agenda-mini,.resa-plus{display:none}}
+.resa-form{border:0;box-shadow:var(--lift);border-radius:var(--r-l);padding:clamp(18px,3vw,32px)}
+.etape{border:0;margin:0 0 26px;padding:0;min-width:0}
+.etape legend{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.02em;margin:0 0 14px;padding:0}
+.etape .n{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--ink);color:var(--white);font-size:16px}
+.statut{margin:0 0 10px}
+.statut[data-type="erreur"]{color:var(--ko)}
+.jours{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 10px;scroll-snap-type:x proximity;scrollbar-width:thin}
+.jours[aria-busy="true"]{min-height:132px;background:linear-gradient(90deg,var(--mist) 0 20%,transparent 0 22%,var(--mist) 0 42%,transparent 0 44%,var(--mist) 0 64%,transparent 0 66%,var(--mist) 0 86%,transparent 0);border-radius:14px}
+.jour{position:relative;flex:none;scroll-snap-align:start}
+.jour input,.heure input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer;z-index:1}
+.j-box{display:grid;justify-items:center;gap:1px;width:76px;padding:10px 6px;border-radius:14px;border:1.5px solid var(--line-strong);background:var(--white);transition:background .15s,border-color .15s,box-shadow .15s}
+.j-sem{font-size:13px;color:var(--muted);text-transform:capitalize}
+.j-num{font-family:var(--display);font-size:26px;font-weight:800;line-height:1.1}
+.j-mois{font-size:13px;color:var(--muted)}
+.j-libres{margin-top:4px;font-size:12px;font-weight:600;color:var(--ok)}
+.jour input:hover+.j-box{border-color:var(--ink)}
+.jour input:checked+.j-box{background:var(--ink);border-color:var(--ink);color:var(--white)}
+.jour input:checked+.j-box .j-sem,.jour input:checked+.j-box .j-mois{color:#C9CDE6}
+.jour input:checked+.j-box .j-libres{color:var(--mint)}
+.jour input:focus-visible+.j-box,.heure input:focus-visible+.h-box{outline:3px solid var(--ink);outline-offset:3px}
+.jour input:disabled+.j-box{opacity:.5;background:var(--mist);cursor:not-allowed}
+.jour input:disabled+.j-box .j-libres{color:var(--muted)}
+.heures{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(132px,1fr))}
+.heure{position:relative}
+.h-box{display:grid;gap:1px;min-height:64px;padding:10px 14px;border-radius:14px;border:1.5px solid var(--line-strong);background:var(--white);transition:background .15s,border-color .15s}
+.h-box strong{font-size:18px;font-weight:700}
+.h-qui,.h-local{font-size:13px;color:var(--muted)}
+.h-local:empty{display:none}
+.heure input:hover+.h-box{border-color:var(--ink)}
+.heure input:checked+.h-box{background:var(--ink);border-color:var(--ink);color:var(--white)}
+.heure input:checked+.h-box .h-qui,.heure input:checked+.h-box .h-local{color:#C9CDE6}
+.heure input:disabled+.h-box{background:var(--mist);border-style:dashed;cursor:not-allowed}
+.heure input:disabled+.h-box strong{color:var(--muted);text-decoration:line-through}
+.recap{display:flex;gap:14px;align-items:center;padding:14px 16px;border-radius:14px;background:var(--mist);margin:0 0 14px}
+.recap p{margin:0;display:grid}
+.recap span[data-recap-qui]{font-size:14px;color:var(--muted)}
+.sq{flex:none;width:22px;height:22px;border-radius:6px;background:var(--signal);box-shadow:0 0 0 5px rgba(255,91,31,.15)}
+.turnstile:empty{display:none}
+.lien{background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline;cursor:pointer;font-weight:600}
+.resa-form>.btn-primary{margin:6px 0 10px}
+.attente{border:0;box-shadow:var(--lift)}
+.attente h2{font-size:clamp(24px,3vw,32px);margin-bottom:10px}
+.proches{margin-top:10px}
+.sticky-bar{position:fixed;left:0;right:0;bottom:0;z-index:58;display:none;align-items:center;justify-content:space-between;gap:12px;padding:12px var(--gutter) calc(12px + env(safe-area-inset-bottom,0px));background:var(--white);box-shadow:0 -10px 30px rgba(18,21,48,.12)}
+.sticky-bar p{display:flex;align-items:center;gap:12px;margin:0;font-size:15px}
+@media (max-width:900px){.sticky-bar:not([hidden]){display:flex}.sticky-bar.is-cachee{transform:translateY(110%);transition:transform .2s}}
+
+/* confirmation : la place se remplit */
+.conf{padding:clamp(28px,5vw,72px) 0 clamp(64px,8vw,104px)}
+.place{display:grid;grid-template-columns:repeat(3,34px);gap:8px;margin-bottom:28px;width:max-content}
+.place i,.place b{width:34px;height:34px;border-radius:8px;background:var(--ink)}
+.place i:nth-child(3){grid-column:1}
+.place b{grid-row:1;grid-column:3;background:transparent;border:2.5px dashed var(--line-strong);transition:background .5s ease .1s,border-color .3s,box-shadow .6s,transform .5s cubic-bezier(.2,1.6,.4,1)}
+.place.is-prise b{background:var(--signal);border-color:var(--signal);box-shadow:0 0 0 8px rgba(255,91,31,.16);transform:scale(1.06)}
+html[data-motion="reduit"] .place b{transition:none}
+.conf h1{margin-bottom:20px}
+.conf h1:focus{outline:none}
+.conf-carte{display:grid;gap:8px;border:0;box-shadow:var(--lift);border-radius:var(--r-l)}
+.conf-carte p{margin:0}
+.conf-quand{font-family:var(--display);font-size:clamp(24px,3vw,32px);letter-spacing:-.02em;line-height:1.15}
+.conf-carte .row{margin-top:10px}
+.conf-h{font-size:clamp(24px,3vw,32px);margin:40px 0 14px}
+.conseils{list-style:none;display:grid;gap:10px;padding:0;margin:0;counter-reset:c}
+.conseils li{position:relative;padding:14px 16px 14px 56px;border-radius:14px;background:var(--mist);counter-increment:c}
+.conseils li::before{content:counter(c);position:absolute;left:14px;top:12px;display:grid;place-items:center;width:28px;height:28px;border-radius:8px;background:var(--ink);color:var(--white);font-weight:700;font-size:14px}
+.conf-suite{margin-top:24px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.conf-suite p{margin:0;flex:1 1 280px}
+.between{justify-content:space-between}
+.confirmer{display:grid;gap:10px;margin-top:12px}
+[data-report]{margin-top:18px}
+[data-report] h2,[data-annulee] h2,[data-resa] h2{font-size:clamp(22px,2.6vw,28px)}
+
+/* Une hauteur d'écran au moins : le contenu chargé par le script ne fait pas sauter le pied de page sous les yeux */
+main#contenu{min-height:100vh}
+/* Hauteurs réservées dès le premier affichage, avant le script : mesurées à 132 px pour la rangée des jours, et deux
+   rangées d'heures sur ordinateur, trois sur téléphone. L'agenda qui se remplit ne repousse plus le formulaire. */
+.jours{min-height:132px}
+.heures{min-height:200px}
+@media (max-width:640px){.heures{min-height:300px}}
+/* La ligne d'état de l'agenda (« Chargement des créneaux… ») garde sa place, visible ou non : en apparaissant puis en
+   disparaissant, elle déplaçait la rangée des jours de 33 px. Vide, elle aurait une hauteur nulle : d'où la hauteur minimale.
+   Masquée, elle reste invisible aux lecteurs d'écran. */
+[data-agenda] .statut{min-height:22.5px} /* une ligne : 15 px × 1,5, mesurée */
+/* !important et plus précise : hf.css force [hidden]{display:none!important} pour tout le reste, à raison */
+[data-agenda] .statut[hidden]{display:block!important;visibility:hidden}

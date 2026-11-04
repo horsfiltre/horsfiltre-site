@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Annuler ou reporter votre échange — Hors Filtre</title>
+<meta name="description" content="Annulez ou reportez votre échange gratuit.">
+<meta name="theme-color" content="#FFFFFF">
+<meta name="robots" content="noindex">
+<meta property="og:title" content="Annuler ou reporter votre échange — Hors Filtre">
+<meta property="og:description" content="Annulez ou reportez votre échange gratuit.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://horsfiltre.fr/reserver/gerer/">
+<meta property="og:image" content="https://horsfiltre.fr/og-image-1200x630.png">
+<meta property="og:locale" content="fr_FR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta name="hf-whatsapp" content="">
+<link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/assets/css/hf.css">
+<link rel="stylesheet" href="/assets/css/reserver.css">
+<script src="/assets/js/hf.js" defer></script>
+<script type="module" src="/assets/js/gerer.js"></script>
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="logo" href="/" aria-label="Hors Filtre, accueil"><img src="/assets/logo/horsfiltre-logo-horizontal.svg" alt="" width="665" height="148"></a>
+    <nav class="nav" aria-label="Navigation principale">
+      <ul class="nav-links" id="menu"><li><a href="/methode/">Méthode</a></li><li><a href="/histoires/">Histoires</a></li><li><a href="/tarifs/">Tarifs</a></li><li><a href="/parents/">Parents</a></li></ul>
+      <a class="btn btn-primary btn-s" href="/reserver/" data-perso-lien>Réserver</a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu"><span></span><span class="visually-hidden">Menu</span></button>
+    </nav>
+  </div>
+</header>
+<main id="contenu">
+<section class="conf" aria-labelledby="t-gerer">
+  <div class="wrap-s">
+    <p class="eyebrow">Votre échange</p>
+    <h1 class="h-page" id="t-gerer">Annuler ou reporter</h1>
+    <p class="notice" data-charge>Chargement de votre réservation…</p>
+    <div class="notice notice-ko" data-erreur hidden><p></p></div>
+    <div class="card conf-carte" data-resa hidden>
+      <div class="row between"><h2 tabindex="-1">Votre échange</h2><span class="badge" data-statut-resa></span></div>
+      <p class="conf-quand"><strong data-quand></strong></p>
+      <p class="small muted" data-qui></p>
+      <p class="small" data-message-action role="status"></p>
+      <div class="row" data-actions>
+        <button class="btn btn-ink" type="button" data-reporter>Reporter</button>
+        <button class="btn btn-secondary" type="button" data-annuler>Annuler l’échange</button>
+      </div>
+      <div class="notice notice-wip confirmer" data-confirmer-annulation hidden>
+        <p><strong>Vraiment annuler ?</strong> Votre créneau sera rendu à quelqu’un d’autre.</p>
+        <div class="row"><button class="btn btn-ink btn-s" type="button" data-oui-annuler>Oui, annuler l’échange</button><button class="btn btn-secondary btn-s" type="button" data-garder>Garder mon échange</button></div>
+      </div>
+    </div>
+    <div class="card" data-report hidden>
+      <h2 tabindex="-1">Choisissez un nouveau créneau</h2>
+      <div data-agenda>
+        <fieldset class="etape"><legend><span class="n" aria-hidden="true">1</span>Le jour</legend><p class="statut small" data-statut hidden></p><div class="jours" data-jours></div></fieldset>
+        <fieldset class="etape"><legend><span class="n" aria-hidden="true">2</span>L’heure</legend><p class="small muted"><span data-jour-titre></span> · heure de Paris</p><div class="heures" data-heures></div></fieldset>
+      </div>
+      <p class="err" data-message-report role="alert"></p>
+      <button class="btn btn-primary" type="button" data-valider-report disabled>Déplacer mon échange</button>
+    </div>
+    <div class="card" data-annulee hidden>
+      <h2 tabindex="-1">Échange annulé.</h2>
+      <p>C’est noté, et votre place est rendue. Vous pouvez en réserver un autre quand vous voulez.</p>
+      <a class="btn btn-primary" href="/reserver/">Réserver un autre créneau</a>
+    </div>
+  </div>
+</section>
+
+</main>
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <a class="foot-logo" href="/" aria-label="Hors Filtre, accueil"><img src="/assets/logo/horsfiltre-logo-horizontal-inverse.svg" alt="" width="665" height="148"></a>
+        <p>Un accompagnement humain vers l’alternance, le stage et le premier emploi, jusqu’à la signature.</p>
+        <p><a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a><br><a href="/questions/" data-whatsapp>WhatsApp : <span class="todo">[À FOURNIR : numéro WhatsApp Business]</span></a></p>
+      </div>
+      <nav aria-labelledby="pied-1"><h2 id="pied-1">Comprendre</h2><ul>
+        <li><a href="/methode/">La méthode</a></li><li><a href="/histoires/">Histoires</a></li><li><a href="/tarifs/">Tarifs</a></li>
+        <li><a href="/test/">Le test du filtre</a></li><li><a href="/ressources/">Ressources</a></li><li><a href="/chiffres/">Comment on compte nos chiffres</a></li></ul></nav>
+      <nav aria-labelledby="pied-2"><h2 id="pied-2">Se rassurer</h2><ul>
+        <li><a href="/parents/">Vous êtes parent ?</a></li><li><a href="/equipe/">L’équipe</a></li><li><a href="/questions/">Questions</a></li>
+        <li><a href="/verifier/">Vérifiez-nous</a></li><li><a href="/reserver/">Réserver un échange</a></li><li><a href="/coulisses/">Les Coulisses</a></li></ul></nav>
+      <nav aria-labelledby="pied-3"><h2 id="pied-3">Informations</h2><ul>
+        <li><a href="/mentions-legales/">Mentions légales</a></li><li><a href="/cgv/">Conditions générales</a></li><li><a href="/confidentialite/">Confidentialité</a></li>
+        <li><a href="/cookies/">Cookies</a></li><li><a href="/accessibilite/">Accessibilité : partiellement conforme</a></li><li><a href="/plan-du-site/">Plan du site</a></li></ul></nav>
+    </div>
+    <div class="foot-legal">
+      <p>© <span data-annee>2026</span> Hors Filtre · SIRET <span class="todo">[À FOURNIR]</span> · Médiateur de la consommation : <span class="todo">[À FOURNIR]</span></p>
+      <button class="toggle-motion" type="button" aria-pressed="false"><i aria-hidden="true"></i>Réduire les animations</button>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
