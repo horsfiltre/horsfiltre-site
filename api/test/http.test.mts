@@ -321,3 +321,17 @@ test('un effet après réservation qui échoue ne fait pas échouer la réservat
   assert.equal(r.statut, 201);
   assert.ok(m.etat.evenements.some((e) => e.evenement === 'effet_apres_requete_en_echec'));
 });
+
+test('CORS : la page peut lire Retry-After et Idempotent-Replayed, sans quoi elle ne saurait ni quand réessayer ni qu’une réservation est rejouée', async () => {
+  const m = await monde();
+  const origin = { origin: 'https://lot-8.horsfiltre.pages.dev' };
+  m.etat.turnstile = 'indisponible';
+  const indispo = await m.post('/v1/reservations', m.demande(m.cible), { entetes: origin });
+  assert.equal(indispo.statut, 503);
+  assert.equal(indispo.entetes['retry-after'], '5');
+  const exposes = (indispo.entetes['access-control-expose-headers'] ?? '').split(',').map((x) => x.trim());
+  assert.ok(exposes.includes('retry-after') && exposes.includes('idempotent-replayed'), String(exposes));
+  // Une origine non autorisée ne reçoit ni l'autorisation, ni la liste des en-têtes exposés.
+  const autre = await m.post('/v1/reservations', m.demande(m.cible), { entetes: { origin: 'https://evil.example' } });
+  assert.equal(autre.entetes['access-control-expose-headers'], undefined);
+});

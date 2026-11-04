@@ -25,3 +25,18 @@
 
 /.well-known/security.txt
   Content-Type: text/plain; charset=utf-8
+
+# Reservation (lot 8) : ces pages remplacent la politique generale (le "!" la detache) pour autoriser,
+# en plus, le controle anti-robot de Cloudflare (script et cadre) et l'API de reservation.
+/reserver/*
+  ! Content-Security-Policy
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; frame-src https://challenges.cloudflare.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://pf1k43c6r3.execute-api.eu-west-3.amazonaws.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+
+# Le lien de gestion porte un jeton : il ne doit fuir ni par le referent, ni par un cache.
+/reserver/gerer/*
+  ! Referrer-Policy
+  Referrer-Policy: no-referrer
+  Cache-Control: no-store
+
+/reserver/confirmation/*
+  Cache-Control: no-store

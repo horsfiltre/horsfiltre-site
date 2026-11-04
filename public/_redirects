@@ -1,0 +1,3 @@
+# Lien d'annulation ou de report : /reserver/gerer/#<jeton> est recommandé (le fragment ne part jamais au serveur).
+# La forme /reserver/gerer/<jeton> de la spécification reste servie par la même page :
+/reserver/gerer/*  /reserver/gerer/  200
