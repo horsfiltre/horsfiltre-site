@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <title>Administration — Hors Filtre</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <a class="saut" href="#contenu">Aller au contenu</a>
+  <header class="entete">
+    <h1>Hors Filtre <span>Administration</span></h1>
+    <p id="session" class="session"></p>
+    <button id="deconnexion" type="button" class="secondaire" hidden>Se déconnecter</button>
+  </header>
+  <nav id="nav" class="onglets" aria-label="Sections" hidden>
+    <a href="#reservations">Réservations</a>
+    <a href="#creneaux">Créneaux</a>
+    <a href="#disponibilites">Disponibilités</a>
+    <a href="#equipe">Équipe</a>
+  </nav>
+  <div id="conflits"></div>
+  <div id="annonces" class="annonces" role="status" aria-live="polite"></div>
+  <div id="erreurs" class="annonces" role="alert"></div>
+  <main id="contenu" tabindex="-1"><p>Connexion en cours…</p></main>
+  <dialog id="dialogue" aria-labelledby="dialogue-titre"></dialog>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

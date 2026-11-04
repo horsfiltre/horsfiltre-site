@@ -16,13 +16,13 @@ horsfiltre-org          compte de gestion : aucune application, seulement l'orga
 
 ## Avant de commencer
 
-- Deux adresses dédiées, sur le modèle de celle de la production : `ilyas.laarif2024+aws-org@gmail.com` et `ilyas.laarif2024+aws-preprod@gmail.com`.
+- Deux adresses dédiées, sur le modèle de celle de la production : l'une pour `horsfiltre-org`, l'autre pour `horsfiltre-preprod`. Elles ne figurent pas dans ce dépôt public : elles sont dans le coffre de mots de passe de l'équipe.
 - Votre carte bancaire : la facturation de toute l'organisation passera par le compte de gestion.
 - Votre téléphone, pour les seconds facteurs.
 
 ## Étape 1 — Créer le compte de gestion `horsfiltre-org`
 
-1. Créez un compte AWS comme vous l'avez fait pour la production : adresse `ilyas.laarif2024+aws-org@gmail.com`, nom `horsfiltre-org`, **offre payante**, support **Basic**.
+1. Créez un compte AWS comme vous l'avez fait pour la production : l'adresse dédiée à `horsfiltre-org` (dans le coffre de l'équipe), nom `horsfiltre-org`, **offre payante**, support **Basic**.
 2. Dès la première connexion : une passkey et une application d'authentification sur le compte racine, **aucune clé d'accès**.
 3. Dans **Budgets**, un budget mensuel à 1 $ avec alerte par e-mail. Une fois l'organisation créée, ce budget couvre la facture de tous les comptes.
 
@@ -41,7 +41,7 @@ Ce que cela change : la facture de la production passe sur le compte de gestion.
 
 ## Étape 4 — Créer `horsfiltre-preprod`
 
-1. Dans `horsfiltre-org` : **Add an AWS account**, **Create an AWS account**. Nom `horsfiltre-preprod`, adresse `ilyas.laarif2024+aws-preprod@gmail.com`, rôle d'accès par défaut `OrganizationAccountAccessRole`.
+1. Dans `horsfiltre-org` : **Add an AWS account**, **Create an AWS account**. Nom `horsfiltre-preprod`, l'adresse dédiée à `horsfiltre-preprod` (dans le coffre de l'équipe), rôle d'accès par défaut `OrganizationAccountAccessRole`.
 2. Le compte racine d'un compte créé ainsi n'a pas de mot de passe. Sur la page de connexion racine, avec cette adresse, utilisez **Forgot password** pour en définir un, généré par Bitwarden.
 3. Ajoutez une passkey et une application d'authentification. Aucune clé d'accès.
 

@@ -1,0 +1,6 @@
+{
+  "api": "https://pf1k43c6r3.execute-api.eu-west-3.amazonaws.com",
+  "cognito": "https://horsfiltre-admin-preprod.auth.eu-west-3.amazoncognito.com",
+  "clientId": "3aspgc1ebah5qujbta8cu2rgcn",
+  "emailsActifs": false
+}
