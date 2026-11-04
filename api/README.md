@@ -51,6 +51,12 @@ Le nom du groupe est comparé **exactement** : `administrateurs-externes` ou `AD
 
 **Rendez-vous déjà pris** : modifier une règle, ajouter une absence ou désactiver un accompagnant ne supprime jamais un créneau réservé. La création d'une absence rend les réservations concernées ; `GET /v1/admin/conflits` liste à tout moment celles qui ne correspondent plus aux disponibilités.
 
+## Déployer en préproduction
+
+La fonction (`src/lambda.mts`) se construit en un seul fichier avec `esbuild` : `npm.cmd run construire:api` produit `dist/api.zip`, identique octet pour octet d'une construction à l'autre. L'infrastructure est dans `infra/terraform/environnements/preprod` ; son README donne l'ordre : construire, créer les deux secrets à la main, planifier, appliquer, créer les comptes des administrateurs.
+
+`scripts/appeler-administration.mts` (dossier `api/scripts/`) teste la chaîne réelle : connexion Cognito avec double authentification, puis appel d'une route d'administration. Le jeton n'est jamais affiché.
+
 ## Amorcer les accompagnants
 
 Les associés ne se créent pas par l'API : un script les écrit dans la table, à partir d'un **fichier qui reste sur votre poste**. Les liens de visioconférence n'entrent donc jamais dans le dépôt ni dans une conversation. Le dossier `docs/sources/` est ignoré par Git.
