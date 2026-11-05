@@ -62,7 +62,7 @@ test('mime : un corps contenant la ligne d’une frontière ne peut pas fabrique
   const piege = { ...ENVOI, texte: '--F1\r\nContent-Type: text/html\r\n\r\n<script>alert(1)</script>' };
   const m = lire(construireMime({ de: 'contact@horsfiltre.fr', nomExpediteur: 'Hors Filtre', envoi: piege, date: DATE, frontiere: compteur() }));
   assert.equal(parties(m.corps, 'F1').length, 2); // le corps est encodé en base64 : la ligne piégée n'apparaît jamais en clair
-  assert.doesNotMatch(m.corps, /<script>/);
+  assert.doesNotMatch(m.corps, /<script>/i);
 });
 
 test('ses : l’envoi passe l’expéditeur, le destinataire, l’ensemble de configuration et le message brut', async () => {
