@@ -7,6 +7,7 @@ import {
   FUSEAU,
   annulerReservation,
   consulterReservation,
+  creerJeton,
   creneauxPublics,
   dateParis,
   empreinteEmail,
@@ -25,6 +26,7 @@ import {
   GROUPE_ADMINISTRATEURS,
   ID,
   depuisErreurMetier,
+  origineAutorisee,
   enTetesCors,
   json,
   lireJson,
@@ -102,7 +104,8 @@ const ROUTES: Route[] = [
 
       try {
         const { reservation, jeton } = await reserverCreneau({ stockage: deps.stockage, maintenant: () => maintenant, secretJeton: deps.secretJeton }, demande, { id: idReservation });
-        await prevenir(deps, deps.apresReservation && (() => deps.apresReservation!({ reservation, jeton })), 'reservation');
+        const origine = origineAutorisee(req.entetes.origin, deps.originesAutorisees);
+        await prevenir(deps, deps.apresReservation && (() => deps.apresReservation!({ reservation, jeton, ...(origine ? { origine } : {}) })), 'reservation');
         return json(201, await vue(deps, reservation));
       } catch (e) {
         if (e instanceof ErreurMetier) return depuisErreurMetier(e);
@@ -135,7 +138,8 @@ const ROUTES: Route[] = [
         const r = await consulterReservation(service, jeton);
         if (r.id !== parametres[0]) return depuisErreurMetier(new ErreurMetier('jeton_invalide'));
         const annulee = await annulerReservation(service, jeton);
-        await prevenir(deps, deps.apresAnnulation && (() => deps.apresAnnulation!({ reservation: annulee, parAdministrateur: false })), 'annulation');
+        const origine = origineAutorisee(req.entetes.origin, deps.originesAutorisees);
+        await prevenir(deps, deps.apresAnnulation && (() => deps.apresAnnulation!({ reservation: annulee, parAdministrateur: false, ...(origine ? { origine } : {}) })), 'annulation');
         return json(200, await vue(deps, annulee));
       } catch (e) {
         if (e instanceof ErreurMetier) return depuisErreurMetier(e);
@@ -163,7 +167,9 @@ const ROUTES: Route[] = [
         // Reporter vers le créneau qu'on occupe déjà : la demande a déjà été traitée, on la confirme.
         if (r.statut === 'confirmee' && r.creneauId === nouveau) return json(200, await vue(deps, r), { 'idempotent-replayed': 'true' });
         const apres = await reporterReservation(service, jeton, nouveau);
-        await prevenir(deps, deps.apresReport && (() => deps.apresReport!({ reservation: apres })), 'report');
+        const origine = origineAutorisee(req.entetes.origin, deps.originesAutorisees);
+        const nouveauJeton = creerJeton(deps.secretJeton, apres.id, new Date(apres.debut));
+        await prevenir(deps, deps.apresReport && (() => deps.apresReport!({ reservation: apres, jeton: nouveauJeton, ancienDebut: r.debut, ...(origine ? { origine } : {}) })), 'report');
         return json(200, await vue(deps, apres));
       } catch (e) {
         if (e instanceof ErreurMetier) return depuisErreurMetier(e);

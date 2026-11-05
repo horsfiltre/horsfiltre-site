@@ -31,6 +31,7 @@ export type CodeErreur =
   | 'reservation_deja_annulee'
   | 'reservation_passee'
   | 'trop_de_reservations'
+  | 'adresse_injoignable'
   | 'jeton_invalide'
   | 'jeton_expire';
 
@@ -87,6 +88,15 @@ export interface Stockage {
 
   /** Réservations (confirmées et annulées) dont le début est compris entre deux instants ISO, inclus. */
   listerReservations(depuis: string, jusqua: string): Promise<Reservation[]>;
+
+  /**
+   * Note qu'un rappel a été envoyé pour CE créneau précis. Vrai la première fois, faux ensuite : un seul envoi, même si
+   * deux exécutions se chevauchent. Clé par l'horaire : un report fait repartir de nouveaux rappels, sans rien réinitialiser.
+   */
+  marquerRappelEnvoye(reservationId: string, debut: string, type: 'veille' | 'heure'): Promise<boolean>;
+  /** Une adresse dont un message a rebondi définitivement ou fait l'objet d'une plainte : on n'y écrit plus. Seule l'empreinte est gardée. */
+  marquerAdresseInjoignable(empreinteEmail: string, motif: 'rebond' | 'plainte', quand: string): Promise<void>;
+  adresseInjoignable(empreinteEmail: string): Promise<boolean>;
 }
 
 export class StockageMemoire implements Stockage {
@@ -95,6 +105,8 @@ export class StockageMemoire implements Stockage {
   readonly accompagnants = new Map<string, Accompagnant>();
   readonly regles = new Map<string, Regle>();
   readonly absences = new Map<string, Absence>();
+  readonly rappels = new Set<string>();
+  readonly injoignables = new Map<string, { motif: 'rebond' | 'plainte'; quand: string }>();
 
   async ecrireCreneaux(creneaux: readonly Creneau[]): Promise<void> {
     for (const c of creneaux) if (!this.creneaux.has(c.id)) this.creneaux.set(c.id, { ...c });
@@ -211,4 +223,18 @@ export class StockageMemoire implements Stockage {
   async listerReservations(depuis: string, jusqua: string): Promise<Reservation[]> {
     return [...this.reservations.values()].filter((r) => r.debut >= depuis && r.debut <= jusqua).map((r) => ({ ...r })).sort((a, b) => a.debut.localeCompare(b.debut) || a.id.localeCompare(b.id));
   }
+
+  async marquerRappelEnvoye(reservationId: string, debut: string, type: 'veille' | 'heure'): Promise<boolean> {
+    const cle = `${reservationId}#${debut}#${type}`;
+    if (this.rappels.has(cle)) return false;
+    this.rappels.add(cle);
+    return true;
+  }
+  async marquerAdresseInjoignable(empreinteEmail: string, motif: 'rebond' | 'plainte', quand: string): Promise<void> {
+    if (!this.injoignables.has(empreinteEmail)) this.injoignables.set(empreinteEmail, { motif, quand });
+  }
+  async adresseInjoignable(empreinteEmail: string): Promise<boolean> {
+    return this.injoignables.has(empreinteEmail);
+  }
 }
+

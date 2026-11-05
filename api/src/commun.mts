@@ -32,10 +32,12 @@ export type DependancesHttp = {
   /** Origines autorisées pour les routes d'administration, par exemple `https://admin.horsfiltre.fr`. */
   originesAdministration?: readonly string[];
   /** Branchés sur l'envoi des e-mails au lot 6c. Une erreur ici ne fait jamais échouer la requête. */
-  apresReservation?: (evt: { reservation: Reservation; jeton: string }) => Promise<void>;
+  /** `origine` : le site sur lequel la personne a réservé (jamais une origine non autorisée) ; les liens de l'e-mail y reviennent. */
+  apresReservation?: (evt: { reservation: Reservation; jeton: string; origine?: string }) => Promise<void>;
   /** `message` n'existe que pour une annulation décidée par l'équipe : il est destiné à la personne. */
-  apresAnnulation?: (evt: { reservation: Reservation; message?: string; parAdministrateur: boolean }) => Promise<void>;
-  apresReport?: (evt: { reservation: Reservation }) => Promise<void>;
+  apresAnnulation?: (evt: { reservation: Reservation; message?: string; parAdministrateur: boolean; origine?: string }) => Promise<void>;
+  /** `jeton` : un NOUVEAU lien, signé avec le nouvel horaire (l'ancien expire avec l'ancien créneau). */
+  apresReport?: (evt: { reservation: Reservation; jeton: string; ancienDebut: string; origine?: string }) => Promise<void>;
   /** Journal structuré. Ne reçoit jamais d'adresse e-mail, de prénom ni de numéro de téléphone. */
   journal?: (evenement: Record<string, unknown>) => void;
 };
@@ -61,6 +63,7 @@ export function probleme(statut: number, code: string, titre: string, extra: Rec
 
 const ERREURS_METIER: Record<string, { statut: number; titre: string }> = {
   creneau_indisponible: { statut: 409, titre: "Ce créneau vient d'être pris." },
+  adresse_injoignable: { statut: 422, titre: "Nous n'arrivons pas à joindre cette adresse e-mail. Essayez-en une autre, ou écrivez-nous à contact@horsfiltre.fr." },
   trop_de_reservations: { statut: 409, titre: 'Vous avez déjà un échange réservé. Annulez-le ou reportez-le depuis votre e-mail de confirmation.' },
   reservation_deja_annulee: { statut: 409, titre: 'Cette réservation est déjà annulée.' },
   reservation_passee: { statut: 409, titre: 'Cet échange a déjà commencé : il ne peut plus être modifié.' },
@@ -84,6 +87,11 @@ export function motifOrigine(motif: string): RegExp {
   // (lettres, chiffres, tirets), jamais un point ni une barre oblique.
   const echappe = motif.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return new RegExp(`^${echappe.replaceAll('\\*', '[a-z0-9-]+')}$`, 'i');
+}
+
+/** L'origine de la requête si elle est autorisée, sinon rien : un en-tête Origin ne fait jamais confiance à lui seul. */
+export function origineAutorisee(origine: string | undefined, autorisees: readonly string[]): string | undefined {
+  return origine && autorisees.some((m) => motifOrigine(m).test(origine)) ? origine : undefined;
 }
 
 export function enTetesCors(origine: string | undefined, autorisees: readonly string[]): Record<string, string> {

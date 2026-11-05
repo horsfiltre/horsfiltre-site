@@ -7,6 +7,15 @@ locals {
   administration_pages = "horsfiltre-admin.pages.dev"
 }
 
+data "aws_caller_identity" "courant" {}
+
+locals {
+  # Site vers lequel pointent les liens des RAPPELS (un rappel n'est pas une réponse à une requête : il ne sait pas où la personne
+  # a réservé). Les e-mails de confirmation, eux, renvoient vers le site où la personne a réservé. En préproduction, c'est l'aperçu
+  # de la branche en cours d'essai ; il change avec elle. En production : https://horsfiltre.fr.
+  site_des_rappels = "https://lot-9-courriels.horsfiltre.pages.dev"
+}
+
 module "donnees" {
   source = "../../modules/donnees"
 
@@ -57,4 +66,15 @@ module "api" {
 
   emetteur  = module.identite.emetteur
   id_client = module.identite.id_client
+
+  # E-mails. L'identité SES (horsfiltre.fr), l'ensemble de configuration et le sujet d'alertes sont créés par l'environnement
+  # `prod`, dans ce même compte : on les désigne par leur nom, sans lire son état.
+  courriel = {
+    expediteur    = "contact@horsfiltre.fr"
+    domaine       = "horsfiltre.fr"
+    ensemble      = "horsfiltre-transactionnel"
+    copie_interne = "contact@horsfiltre.fr"
+    url_site      = local.site_des_rappels
+    arn_alertes   = "arn:aws:sns:eu-west-3:${data.aws_caller_identity.courant.account_id}:horsfiltre-alertes-courriel"
+  }
 }

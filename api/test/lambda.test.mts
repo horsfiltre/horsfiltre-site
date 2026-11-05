@@ -15,7 +15,7 @@ const SECRET_TURNSTILE = randomBytes(18).toString('base64url');
 const CLE_IDEMPOTENCE = randomUUID();
 const CONFIG: Configuration = {
   nomTable: 'preprod-horsfiltre', originesPubliques: ['https://*.horsfiltre.pages.dev'], originesAdministration: ['https://admin.horsfiltre.fr'],
-  paramSecretJeton: '/horsfiltre/preprod/jeton-secret', paramSecretTurnstile: '/horsfiltre/preprod/turnstile-secret', hotesTurnstile: undefined,
+  paramSecretJeton: '/horsfiltre/preprod/jeton-secret', paramSecretTurnstile: '/horsfiltre/preprod/turnstile-secret', hotesTurnstile: undefined, courriel: undefined,
 };
 
 function evt(methode: string, chemin: string, options: { query?: Record<string, string>; headers?: Record<string, string>; body?: string | null; base64?: boolean; claims?: Record<string, unknown>; ip?: string } = {}): EvenementApi {
@@ -219,4 +219,101 @@ test('initialisation : le magasin de paramètres n’est lu qu’une fois pour t
   const a = await application();
   for (let i = 0; i < 3; i++) await a.handler(evt('GET', '/v1/creneaux'));
   assert.equal(a.ssm.appels, 1);
+});
+
+// ---------------------------------------------------------------------------------------------- e-mails
+
+import { lireConfigurationCourriel, lireSecretJeton } from '../src/lambda.mts';
+import type { Envoi } from '../src/courriel.mts';
+
+const COURRIEL = { expediteur: 'contact@horsfiltre.fr', ensemble: 'horsfiltre-transactionnel', copieInterne: 'contact@horsfiltre.fr', urlSite: 'https://horsfiltre.fr' };
+
+test('courriel : la configuration est lue en bloc, absente = e-mails désactivés, à moitié remplie = erreur qui nomme ce qui manque', () => {
+  assert.equal(lireConfigurationCourriel({}), undefined);
+  assert.equal(lireConfigurationCourriel({ EXPEDITEUR: '  ' }), undefined);
+  assert.deepEqual(lireConfigurationCourriel({ EXPEDITEUR: 'contact@horsfiltre.fr', ENSEMBLE_CONFIGURATION: 'e', COPIE_INTERNE: 'contact@horsfiltre.fr', URL_SITE: 'https://horsfiltre.fr/' }),
+    { expediteur: 'contact@horsfiltre.fr', ensemble: 'e', copieInterne: 'contact@horsfiltre.fr', urlSite: 'https://horsfiltre.fr' }); // la barre finale est retirée
+  assert.throws(() => lireConfigurationCourriel({ EXPEDITEUR: 'contact@horsfiltre.fr' }), /ENSEMBLE_CONFIGURATION, COPIE_INTERNE, URL_SITE/);
+  for (const url of ['http://horsfiltre.fr', 'horsfiltre.fr', 'https://horsfiltre.fr/chemin', 'javascript:alert(1)', 'https://evil.example@horsfiltre.fr']) {
+    assert.throws(() => lireConfigurationCourriel({ EXPEDITEUR: 'a@b.fr', ENSEMBLE_CONFIGURATION: 'e', COPIE_INTERNE: 'a@b.fr', URL_SITE: url }), /URL_SITE|incomplète/, url);
+  }
+});
+
+test('courriel : un seul secret se lit avec les mêmes garde-fous, et l’erreur ne contient jamais sa valeur', async () => {
+  const bon: ClientParametres = { send: async () => ({ Parameters: [{ Name: '/p/j', Value: SECRET_JETON }] }) };
+  assert.equal(await lireSecretJeton(bon, '/p/j'), SECRET_JETON);
+  await assert.rejects(lireSecretJeton({ send: async () => ({ Parameters: [], InvalidParameters: ['/p/j'] }) }, '/p/j'), /introuvable/);
+  await assert.rejects(lireSecretJeton({ send: async () => ({ Parameters: [{ Name: '/p/j', Value: 'trop-court-secret' }] }) }, '/p/j'), (e: Error) => /trop court/.test(e.message) && !e.message.includes('trop-court-secret'));
+});
+
+async function applicationAvecCourriel(courriel: typeof COURRIEL | undefined) {
+  const a = await application();
+  const envois: Envoi[] = [];
+  const journal: Record<string, unknown>[] = [];
+  const app = await creerApplication({ ...CONFIG, courriel }, {
+    ssm: ssmOk(), stockage: a.stockage, maintenant: () => new Date('2026-11-16T09:00:00Z'), journal: (e) => journal.push(e),
+    fetchImpl: (async () => new Response(JSON.stringify({ success: true }), { status: 200 })) as unknown as typeof fetch,
+    envoyeur: async (e) => { envois.push(e); },
+  });
+  const handler = creerHandler(async () => app, (e) => journal.push(e));
+  const cible = [...a.stockage.creneaux.values()].find((c) => c.debut === '2026-11-17T17:00:00.000Z')!;
+  const reserver = (email: string, cle = CLE_IDEMPOTENCE, origin = 'https://lot-9.horsfiltre.pages.dev') => handler(evt('POST', '/v1/reservations', {
+    headers: { 'content-type': 'application/json', 'idempotency-key': cle, origin },
+    body: JSON.stringify({ creneauId: cible.id, prenom: 'Sarah', email, recherche: 'alternance', canal: 'visio', turnstile: 'jeton' }),
+  }));
+  return { ...a, envois, journal, handler, reserver, cible };
+}
+
+test('courriel, de bout en bout : une réservation par l’API envoie la confirmation à la personne et la copie à l’équipe, avec le site d’origine', async () => {
+  const m = await applicationAvecCourriel({ ...COURRIEL, urlSite: 'https://horsfiltre.fr' });
+  const r = await m.reserver('sarah@exemple.fr');
+  assert.equal(r.statusCode, 201);
+  assert.deepEqual(m.envois.map((e) => e.a), ['sarah@exemple.fr', 'contact@horsfiltre.fr']);
+  assert.match(m.envois[0]!.texte, /https:\/\/lot-9\.horsfiltre\.pages\.dev\/reserver\/gerer\/#/);
+  assert.ok(!JSON.stringify(JSON.parse(r.body)).includes('gerer')); // la réponse de l'API, elle, ne porte toujours aucun lien
+});
+
+test('courriel : l’origine d’un site non autorisé ne fabrique jamais le lien d’un e-mail', async () => {
+  const m = await applicationAvecCourriel(COURRIEL);
+  await m.reserver('sarah@exemple.fr', undefined, 'https://evil.example');
+  assert.match(m.envois[0]!.texte, /https:\/\/horsfiltre\.fr\/reserver\/gerer\//);
+  assert.doesNotMatch(m.envois[0]!.texte + m.envois[0]!.html, /evil\.example/);
+});
+
+test('courriel : rejouer la même demande ne renvoie pas d’e-mail', async () => {
+  const m = await applicationAvecCourriel(COURRIEL);
+  assert.equal((await m.reserver('sarah@exemple.fr')).statusCode, 201);
+  assert.equal((await m.reserver('sarah@exemple.fr')).statusCode, 200); // rejeu : même réservation
+  assert.equal(m.envois.length, 2); // la confirmation et la copie, une seule fois
+});
+
+test('courriel : un créneau pris, une adresse injoignable ou un robot refusé n’envoient rien', async () => {
+  const m = await applicationAvecCourriel(COURRIEL);
+  await m.stockage.marquerAdresseInjoignable((await import('../../shared/src/index.mts')).empreinteEmail('rebond@exemple.fr'), 'rebond', new Date().toISOString());
+  const refus = await m.reserver('rebond@exemple.fr');
+  assert.equal(refus.statusCode, 422);
+  assert.equal(JSON.parse(refus.body).code, 'adresse_injoignable');
+  assert.equal(m.envois.length, 0);
+});
+
+test('courriel : une panne d’envoi ne fait pas échouer la réservation, et laisse une trace pour l’alarme', async () => {
+  const a = await application(); const journal: Record<string, unknown>[] = [];
+  const app = await creerApplication({ ...CONFIG, courriel: COURRIEL }, {
+    ssm: ssmOk(), stockage: a.stockage, maintenant: () => new Date('2026-11-16T09:00:00Z'), journal: (e) => journal.push(e),
+    fetchImpl: (async () => new Response(JSON.stringify({ success: true }), { status: 200 })) as unknown as typeof fetch,
+    envoyeur: async () => { throw Object.assign(new Error('SES indisponible'), { name: 'ServiceUnavailableException' }); },
+  });
+  const cible = [...a.stockage.creneaux.values()].find((c) => c.debut === '2026-11-17T17:00:00.000Z')!;
+  const r = await creerHandler(async () => app)(evt('POST', '/v1/reservations', { headers: { 'content-type': 'application/json', 'idempotency-key': CLE_IDEMPOTENCE },
+    body: JSON.stringify({ creneauId: cible.id, prenom: 'Sarah', email: 'sarah@exemple.fr', recherche: 'alternance', canal: 'visio', turnstile: 'jeton' }) }));
+  assert.equal(r.statusCode, 201); // la réservation est faite
+  assert.equal([...a.stockage.reservations.values()].length, 1);
+  assert.equal(journal.filter((e) => e.evenement === 'courriel_echec').length, 2); // la confirmation et la copie
+  assert.doesNotMatch(JSON.stringify(journal), /sarah@exemple\.fr/);
+});
+
+test('courriel : sans configuration des e-mails, la réservation fonctionne et rien ne part', async () => {
+  const m = await applicationAvecCourriel(undefined);
+  assert.equal((await m.reserver('sarah@exemple.fr')).statusCode, 201);
+  assert.equal(m.envois.length, 0);
 });

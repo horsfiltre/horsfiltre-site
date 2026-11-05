@@ -307,4 +307,37 @@ export function definirContrat(fabrique: Fabrique): void {
       assert.deepEqual(apres.map((r) => r.id), [r1.id]);
     } finally { await fin(); }
   });
+
+  test(`[${nom}] un rappel ne s'envoie qu'une fois par réservation, par horaire et par type ; un report en rouvre un nouveau`, async () => {
+    const stockage = await creer();
+    const id = nouvelIdentifiant();
+    const debut = new Date(Date.UTC(2030, 0, 7, 17, 0)).toISOString();
+    const autreDebut = new Date(Date.UTC(2030, 0, 9, 17, 0)).toISOString();
+    assert.equal(await stockage.marquerRappelEnvoye(id, debut, 'veille'), true); // le premier obtient « vrai » : il envoie
+    assert.equal(await stockage.marquerRappelEnvoye(id, debut, 'veille'), false); // le second, jamais
+    assert.equal(await stockage.marquerRappelEnvoye(id, debut, 'heure'), true); // l'autre type est indépendant
+    assert.equal(await stockage.marquerRappelEnvoye(nouvelIdentifiant(), debut, 'veille'), true); // une autre réservation aussi
+    assert.equal(await stockage.marquerRappelEnvoye(id, autreDebut, 'veille'), true); // après un report, de nouveaux rappels repartent
+  });
+
+  test(`[${nom}] cinq exécutions simultanées du même rappel : une seule obtient « vrai »`, async () => {
+    const stockage = await creer();
+    const id = nouvelIdentifiant();
+    const debut = new Date(Date.UTC(2030, 0, 8, 17, 0)).toISOString();
+    const resultats = await Promise.all(Array.from({ length: 5 }, () => stockage.marquerRappelEnvoye(id, debut, 'heure')));
+    assert.equal(resultats.filter(Boolean).length, 1);
+  });
+
+  test(`[${nom}] une adresse marquée injoignable le reste, sans que d'autres adresses le deviennent`, async () => {
+    const stockage = await creer();
+    const a = empreinteEmail(`${nouvelIdentifiant().toLowerCase()}@exemple.fr`);
+    const b = empreinteEmail(`${nouvelIdentifiant().toLowerCase()}@exemple.fr`);
+    assert.equal(await stockage.adresseInjoignable(a), false);
+    await stockage.marquerAdresseInjoignable(a, 'rebond', new Date().toISOString());
+    assert.equal(await stockage.adresseInjoignable(a), true);
+    assert.equal(await stockage.adresseInjoignable(b), false);
+    await stockage.marquerAdresseInjoignable(a, 'plainte', new Date().toISOString()); // rejouer ne casse rien
+    assert.equal(await stockage.adresseInjoignable(a), true);
+  });
 }
+

@@ -23,6 +23,7 @@ export async function reserverCreneau(
   if (!reservable(creneau, maintenant)) throw new ErreurMetier('creneau_indisponible');
 
   const empreinte = empreinteEmail(demande.email);
+  if (await deps.stockage.adresseInjoignable(empreinte)) throw new ErreurMetier('adresse_injoignable');
   if ((await deps.stockage.compterReservationsActives(empreinte)) >= MAX_RESERVATIONS_ACTIVES_PAR_EMAIL)
     throw new ErreurMetier('trop_de_reservations');
 
