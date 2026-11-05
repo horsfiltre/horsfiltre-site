@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { genererCreneaux, type Regle } from '../src/creneaux.mts';
-import { validerDemande } from '../src/reservation.mts';
+import { empreinteEmail, validerDemande } from '../src/reservation.mts';
 import { annulerParAdministrateur, annulerReservation, consulterReservation, reporterReservation, reserverCreneau, type Dependances } from '../src/service.mts';
 import { ErreurMetier, StockageMemoire } from '../src/stockage.mts';
 
@@ -126,4 +126,14 @@ test('on ne ferme pas un créneau réservé : il faut d’abord annuler la rése
   const { deps, stockage, creneaux } = await monde();
   await reserverCreneau(deps, demande(creneaux[3]!.id));
   assert.equal(await code(stockage.changerStatutCreneau(creneaux[3]!.id, 'ferme')), 'creneau_indisponible');
+});
+
+test('réserver refuse une adresse marquée injoignable, sans rien prendre, quelle que soit la casse', async () => {
+  const { deps, stockage, creneaux } = await monde();
+  await stockage.marquerAdresseInjoignable(empreinteEmail('rebond@exemple.fr'), 'rebond', LUNDI.toISOString());
+  const cible = creneaux.find((c) => c.debut === '2026-11-17T17:00:00.000Z')!;
+  assert.equal(await code(reserverCreneau(deps, demande(cible.id, 'rebond@exemple.fr'))), 'adresse_injoignable');
+  assert.equal(await code(reserverCreneau(deps, demande(cible.id, 'REBOND@Exemple.FR'))), 'adresse_injoignable'); // la casse ne contourne rien
+  assert.equal((await stockage.lireCreneau(cible.id))!.statut, 'libre'); // le créneau est resté libre
+  assert.equal(await code(reserverCreneau(deps, demande(cible.id, 'autre@exemple.fr'))), 'aucune erreur'); // une autre adresse passe
 });

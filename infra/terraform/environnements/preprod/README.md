@@ -92,6 +92,22 @@ node api\scripts\appeler-administration.mts GET /v1/admin/accompagnants
 
 Le script affiche une adresse : l'ouvrir dans le navigateur, se connecter, puis revenir au terminal. Il doit afficher « Groupes : administrateurs » et la liste des accompagnants (code 200).
 
+## Les e-mails
+
+La confirmation, le report et l'annulation partent depuis la fonction de l'API ; les rappels (la veille et une heure avant) depuis une fonction planifiée toutes les 5 minutes ; les rebonds et plaintes sont traités par une troisième fonction, déclenchée par les événements de SES. Tout se règle par la variable `courriel` du module `api` : `null` désactive l'envoi sans toucher à la réservation.
+
+Les droits d'envoi sont limités à l'adresse `contact@horsfiltre.fr`, à l'identité `horsfiltre.fr` et à l'ensemble de configuration `horsfiltre-transactionnel`. Les fonctions n'ont aucun autre accès à SES.
+
+**Tester sans envoyer à de vraies personnes.** SES fournit des adresses de simulation, qui ne comptent pas dans votre taux de rebonds :
+
+- `success@simulator.amazonses.com` : le message est « délivré » ;
+- `bounce@simulator.amazonses.com` : un rebond définitif. Après quelques secondes, l'adresse est marquée injoignable, et **réserver de nouveau avec elle est refusé** ;
+- `complaint@simulator.amazonses.com` : une plainte, avec le même effet.
+
+**Les rappels** utilisent `site_des_rappels` (dans `main.tf`) pour construire le lien de gestion. En préproduction, c'est l'aperçu de la branche en cours d'essai.
+
+**Si un e-mail ne part pas**, l'alarme `preprod-horsfiltre-api-courriels-en-echec` prévient l'équipe à l'adresse des alertes SES, et la ligne `courriel_echec` du journal de la fonction donne le type de message et le motif, sans aucune adresse.
+
 ## Retirer cette préproduction
 
 Quand le compte `horsfiltre-preprod` existe : y recréer les mêmes ressources, basculer, puis ici `terraform destroy`. Aucune protection contre la suppression n'est active.

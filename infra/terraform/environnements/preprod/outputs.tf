@@ -29,3 +29,8 @@ output "adresse_connexion" {
 output "groupe_journaux_fonction" {
   value = module.api.groupe_journaux_fonction
 }
+
+output "fonctions_courriel" {
+  description = "Les fonctions des rappels et des retours."
+  value       = module.api.fonctions_courriel
+}

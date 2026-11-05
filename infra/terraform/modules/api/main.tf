@@ -102,14 +102,14 @@ resource "aws_lambda_function" "api" {
   timeout     = var.delai_secondes
 
   environment {
-    variables = {
+    variables = merge({
       TABLE_NAME              = var.nom_table
       ORIGINES_PUBLIQUES      = join(",", var.origines_publiques)
       ORIGINES_ADMINISTRATION = join(",", var.origines_administration)
       PARAM_SECRET_JETON      = var.param_secret_jeton
       PARAM_SECRET_TURNSTILE  = var.param_secret_turnstile
       TURNSTILE_HOTES         = join(",", var.hotes_turnstile)
-    }
+    }, local.variables_courriel)
   }
 
   logging_config {

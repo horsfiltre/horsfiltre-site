@@ -37,6 +37,8 @@ type Element = Record<string, unknown>;
 
 const cleCreneau = (accompagnantId: string, debut: string): Cle => ({ PK: `ACCOMP#${accompagnantId}`, SK: `CRENEAU#${debut}` });
 const cleReservation = (id: string): Cle => ({ PK: `RESA#${id}`, SK: 'META' });
+const cleRappel = (id: string, debut: string, type: string): Cle => ({ PK: `RAPPEL#${id}`, SK: `${debut}#${type}` });
+const cleInjoignable = (empreinte: string): Cle => ({ PK: `INJOIGNABLE#${empreinte}`, SK: 'META' });
 const expiration = (debut: string): number => Math.floor(Date.parse(debut) / 1000) + CONSERVATION_JOURS * 86_400;
 const cleEmail = (r: Pick<Reservation, 'empreinteEmail' | 'debut' | 'id'>): string => `${r.empreinteEmail}#${r.debut}#${r.id}`;
 
@@ -544,4 +546,38 @@ export class StockageDynamoDB implements Stockage {
     }
     return resultat.sort((a, b) => a.debut.localeCompare(b.debut) || a.id.localeCompare(b.id));
   }
+
+  async marquerRappelEnvoye(reservationId: string, debut: string, type: 'veille' | 'heure'): Promise<boolean> {
+    try {
+      await this.#doc.send(new PutCommand({
+        TableName: this.#table,
+        Item: { ...cleRappel(reservationId, debut, type), entite: 'rappel', expireLe: Math.floor(Date.parse(debut) / 1000) + 30 * 86_400 },
+        // Atomique : si deux exécutions se chevauchent, une seule des deux obtient « vrai » et envoie.
+        ConditionExpression: 'attribute_not_exists(PK)',
+      }));
+      return true;
+    } catch (e) {
+      if (nomErreur(e) !== 'ConditionalCheckFailedException') throw e;
+      return false;
+    }
+  }
+
+  async marquerAdresseInjoignable(empreinteEmail: string, motif: 'rebond' | 'plainte', quand: string): Promise<void> {
+    try {
+      await this.#doc.send(new PutCommand({
+        TableName: this.#table,
+        // Seule l'empreinte est gardée, jamais l'adresse. Conservée 12 mois, comme les réservations.
+        Item: { ...cleInjoignable(empreinteEmail), entite: 'injoignable', motif, quand, expireLe: Math.floor(Date.parse(quand) / 1000) + CONSERVATION_JOURS * 86_400 },
+        ConditionExpression: 'attribute_not_exists(PK)',
+      }));
+    } catch (e) {
+      if (nomErreur(e) !== 'ConditionalCheckFailedException') throw e; // déjà marquée : rien à faire
+    }
+  }
+
+  async adresseInjoignable(empreinteEmail: string): Promise<boolean> {
+    const r = await this.#doc.send(new GetCommand({ TableName: this.#table, Key: cleInjoignable(empreinteEmail), ConsistentRead: true }));
+    return Boolean(r.Item);
+  }
 }
+

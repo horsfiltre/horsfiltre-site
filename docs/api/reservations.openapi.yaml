@@ -105,7 +105,8 @@ paths:
         '422':
           description: >-
             Un champ est invalide (`donnees_invalides`, avec `erreurs` : un message par champ), ou la vérification
-            anti-robot a échoué (`turnstile_invalide`, `erreurs.turnstile`).
+            anti-robot a échoué (`turnstile_invalide`, `erreurs.turnstile`), ou l'adresse e-mail a rebondi définitivement ou fait l'objet d'une
+            plainte (`adresse_injoignable`) : elle ne peut plus recevoir de message, donc ne peut plus réserver.
           content:
             application/problem+json:
               schema: { $ref: '#/components/schemas/Probleme' }

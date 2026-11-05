@@ -102,3 +102,19 @@ variable "rafale_reservation" {
   type        = number
   default     = 5
 }
+
+variable "courriel" {
+  description = <<-EOT
+    Envoi des e-mails (confirmation, rappels, annulation). `null` : la réservation fonctionne, aucun e-mail ne part.
+    L'identité SES (domaine) et l'ensemble de configuration existent déjà : ils sont créés par l'environnement `prod`.
+  EOT
+  type = object({
+    expediteur    = string # adresse d'expédition, seule autorisée par la politique IAM
+    domaine       = string # identité SES vérifiée
+    ensemble      = string # ensemble de configuration : c'est lui qui publie les rebonds et les plaintes
+    copie_interne = string # reçoit une copie de chaque réservation, annulation et report
+    url_site      = string # site vers lequel pointent les rappels, par exemple https://horsfiltre.fr
+    arn_alertes   = string # sujet SNS qui prévient l'équipe
+  })
+  default = null
+}
