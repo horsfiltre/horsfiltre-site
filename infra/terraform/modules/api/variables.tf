@@ -117,4 +117,10 @@ variable "courriel" {
     arn_alertes   = string # sujet SNS qui prévient l'équipe
   })
   default = null
+
+  # Une adresse d'expédition hors du domaine ne serait couverte par aucune identité de la politique : l'envoi serait refusé.
+  validation {
+    condition     = try(length(split("@", var.courriel.expediteur)) == 2 && lower(split("@", var.courriel.expediteur)[1]) == lower(var.courriel.domaine), var.courriel == null)
+    error_message = "courriel.expediteur doit être une adresse du domaine courriel.domaine (par exemple contact@horsfiltre.fr pour horsfiltre.fr)."
+  }
 }
