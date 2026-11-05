@@ -106,7 +106,7 @@ Les droits d'envoi sont limités à l'adresse `contact@horsfiltre.fr`, à l'iden
 
 **Les rappels** utilisent `site_des_rappels` (dans `main.tf`) pour construire le lien de gestion. En préproduction, c'est l'aperçu de la branche en cours d'essai.
 
-**Si un e-mail ne part pas**, l'alarme `preprod-horsfiltre-api-courriels-en-echec` prévient l'équipe à l'adresse des alertes SES, et la ligne `courriel_echec` du journal de la fonction donne le type de message et le motif, sans aucune adresse.
+**Si un e-mail ne part pas**, l'alarme `preprod-horsfiltre-api-courriels-en-echec` prévient l'équipe à l'adresse des alertes SES, et la ligne `courriel_echec` du journal de la fonction donne le type de message, le nom de l'erreur, le statut HTTP et le message d'AWS (qui nomme l'action, la ressource refusée et la raison du refus). Chaque adresse citée y perd sa partie locale (`***@gmail.com`).
 
 ## Retirer cette préproduction
 

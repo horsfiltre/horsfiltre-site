@@ -15,12 +15,12 @@ function reservation(surcharges: Partial<Reservation> = {}): Reservation {
     prenom: 'Camille', email, empreinteEmail: empreinteEmail(email), recherche: 'alternance', canal: 'visio', whatsapp: null, motivation: 'Une alternance en logistique.', fuseau: 'Europe/Paris',
     creeLe: '2026-11-10T09:00:00.000Z', ...surcharges };
 }
-async function monde(options: { echec?: (e: Envoi) => boolean; sansAccompagnant?: boolean } = {}) {
+async function monde(options: { echec?: (e: Envoi) => boolean; erreur?: (e: Envoi) => Error; sansAccompagnant?: boolean } = {}) {
   const stockage = new StockageMemoire();
   if (!options.sansAccompagnant) await stockage.ecrireAccompagnant({ id: 'ilyas', prenom: 'Ilyas', lienVisio: 'https://meet.google.com/abc-defg-hij', actif: true });
   const envois: Envoi[] = []; const journal: Record<string, unknown>[] = [];
   const n = creerNotifications({ stockage, secretJeton: SECRET, maintenant: () => MAINTENANT, journal: (e) => journal.push(e), config: { copieInterne: COPIE, urlSite: 'https://horsfiltre.fr' },
-    envoyer: async (e) => { if (options.echec?.(e)) throw Object.assign(new Error('Throttling'), { name: 'ThrottlingException' }); envois.push(e); } });
+    envoyer: async (e) => { if (options.echec?.(e)) throw options.erreur?.(e) ?? Object.assign(new Error('Throttling'), { name: 'ThrottlingException' }); envois.push(e); } });
   return { stockage, envois, journal, n };
 }
 const jetonDe = (e: Envoi) => e.texte.match(/#([\w.-]+)/)?.[1] ?? '';
@@ -59,6 +59,22 @@ test('réservation : si l’envoi à la personne échoue, la copie interne part 
   const echec = journal.find((e) => e.evenement === 'courriel_echec')!;
   assert.deepEqual([echec.type, echec.erreur, echec.reservationId], ['confirmation', 'ThrottlingException', r.id]);
   assert.doesNotMatch(JSON.stringify(journal), /@exemple\.fr/);
+});
+
+test('réservation : un refus de SES est journalisé avec la ressource refusée, sans la partie locale d’aucune adresse', async () => {
+  const refus = (e: Envoi) => Object.assign(new Error(`User \`arn:aws:sts::452473973922:assumed-role/preprod-horsfiltre-api/x' is not authorized to perform \`ses:SendEmail' on resource \`arn:aws:ses:eu-west-3:452473973922:identity/contact@horsfiltre.fr' (to ${e.a})`), { name: 'AccessDeniedException', $metadata: { httpStatusCode: 403 } });
+  const { n, journal } = await monde({ echec: () => true, erreur: refus }); const r = reservation();
+  await n.apresReservation({ reservation: r, jeton: creerJeton(SECRET, r.id, DEBUT) });
+  const echecs = journal.filter((e) => e.evenement === 'courriel_echec');
+  assert.deepEqual(echecs.map((e) => e.type), ['confirmation', 'copie_interne']);
+  for (const e of echecs) {
+    assert.equal(e.erreur, 'AccessDeniedException');
+    assert.equal(e.statut, 403);
+    assert.match(String(e.message), /identity\/\*\*\*@horsfiltre\.fr/);
+  }
+  const texte = JSON.stringify(journal);
+  assert.ok(!texte.includes(r.email) && !texte.includes(COPIE));
+  assert.doesNotMatch(texte, /[\w.+-]@/);
 });
 
 test('réservation : un accompagnant introuvable n’envoie rien d’inexact, et l’échec est journalisé', async () => {
