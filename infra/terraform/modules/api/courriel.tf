@@ -29,6 +29,9 @@ data "aws_iam_policy_document" "approbation_lambda" {
 # ---------------------------------------------------------------------------------------------- l'API envoie
 
 # Envoyer, et rien d'autre : seulement depuis l'adresse prévue, avec l'identité et l'ensemble de configuration prévus.
+# L'action est `ses:SendRawEmail`, et non `ses:SendEmail` : le code appelle SendEmail (API v2) avec un contenu BRUT
+# (`Content.Raw`, imposé par le fichier d'agenda), et SES contrôle alors la permission d'envoi brut. Avec `ses:SendEmail`
+# seul, chaque envoi est refusé (AccessDeniedException), alors que le simulateur IAM, interrogé sur ses:SendEmail, autorise.
 resource "aws_iam_role_policy" "courriel_api" {
   count = local.courriel ? 1 : 0
   name  = "envoi-courriel"
@@ -39,7 +42,7 @@ resource "aws_iam_role_policy" "courriel_api" {
     Statement = [{
       Sid       = "EnvoyerDepuisLAdressePrevue"
       Effect    = "Allow"
-      Action    = ["ses:SendEmail"]
+      Action    = ["ses:SendRawEmail"]
       Resource  = local.arn_ses
       Condition = { StringEquals = { "ses:FromAddress" = var.courriel.expediteur } }
     }]
@@ -77,7 +80,7 @@ resource "aws_iam_role_policy" "rappels" {
         Resource = [var.arn_table, "${var.arn_table}/index/*"]
       },
       { Sid = "SecretDesLiens", Effect = "Allow", Action = ["ssm:GetParameters"], Resource = ["arn:aws:ssm:${var.region}:${data.aws_caller_identity.courant.account_id}:parameter${var.param_secret_jeton}"] },
-      { Sid = "Envoyer", Effect = "Allow", Action = ["ses:SendEmail"], Resource = local.arn_ses, Condition = { StringEquals = { "ses:FromAddress" = var.courriel.expediteur } } },
+      { Sid = "Envoyer", Effect = "Allow", Action = ["ses:SendRawEmail"], Resource = local.arn_ses, Condition = { StringEquals = { "ses:FromAddress" = var.courriel.expediteur } } },
     ]
   })
 }

@@ -73,8 +73,8 @@ test('réservation : un refus de SES est journalisé avec la ressource refusée,
     assert.match(String(e.message), /identity\/\*\*\*@horsfiltre\.fr/);
   }
   const texte = JSON.stringify(journal);
-  assert.ok(!texte.includes(r.email) && !texte.includes(COPIE));
-  assert.doesNotMatch(texte, /[\w.+-]@/);
+  assert.ok(!texte.includes(r.email) && !texte.includes(COPIE)); // aucune adresse complète
+  assert.doesNotMatch(texte, /[\w.+-]@/); // aucune partie locale : seul « *** » précède un @, le domaine reste pour le diagnostic
 });
 
 test('réservation : un accompagnant introuvable n’envoie rien d’inexact, et l’échec est journalisé', async () => {
