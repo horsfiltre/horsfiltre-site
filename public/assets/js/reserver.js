@@ -1,4 +1,5 @@
 // Réserver un échange gratuit (spécification 9.12, contrat OpenAPI). Le serveur a toujours le dernier mot.
+import { decrireRefus422 } from './refus.js';
 import { reserver, nouvelleCle, ErreurApi, DEMO, FERME, RECHERCHES } from './api.js';
 import { creerSelecteur } from './agenda.js';
 import { heure, heureLocale, jour, majuscule, fuseauVisiteur } from './temps.js';
@@ -163,10 +164,13 @@ async function envoyer(tentative = 0) {
       dire('', 'wip', frag);
     } else if (e.status === 409) {
       dire('Vous avez déjà un échange prévu. Pour le changer, utilisez le lien de votre e-mail de confirmation.', 'wip');
-    } else if (e.status === 422 && e.erreurs) {
-      montrerErreurs(Object.entries(e.erreurs).map(([k, v]) => [k, MESSAGES[k] || String(v)]));
     } else if (e.status === 422) {
-      dire('La vérification anti-robot a échoué. Réessayez : elle se relance toute seule.', 'wip');
+      const refus = decrireRefus422(e);
+      if (refus.type === 'champs') montrerErreurs(Object.entries(e.erreurs).map(([k, v]) => [k, MESSAGES[k] || String(v)]));
+      // Un message envoyé à cette adresse a rebondi : on le dit près du champ, jamais sous l'étiquette du contrôle anti-robot.
+      else if (refus.type === 'adresse_injoignable') montrerErreurs([['email', 'Nous n’arrivons pas à joindre cette adresse e-mail. Essayez-en une autre, ou écrivez-nous à contact@horsfiltre.fr.']]);
+      else if (refus.type === 'robot') dire('La vérification anti-robot a échoué. Réessayez : elle se relance toute seule.', 'wip');
+      else dire('', 'ko', avecContact('Rien n’a été réservé. Réessayez, ou écrivez-nous : '));
     } else if (e.status === 429) {
       dire('Trop de tentatives d’affilée. Réessayez dans une minute.', 'wip');
     } else if (e.status === 503 && tentative === 0) {

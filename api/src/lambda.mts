@@ -10,6 +10,7 @@ import type { Stockage } from '../../shared/src/index.mts';
 import { groupesDepuisClaim, type DependancesHttp, type Identite, type Reponse, type Requete } from './commun.mts';
 import { creerGestionnaire } from './http.mts';
 import { creerEnvoyeurSes, type Envoyeur } from './courriel.mts';
+import { motifErreur } from './motif-erreur.mts';
 import { creerNotifications } from './notifications.mts';
 import { executerRappels } from './rappels.mts';
 import { traiterRetour } from './retours.mts';
@@ -212,7 +213,7 @@ export function creerHandler(initialiser: () => Promise<(req: Requete) => Promis
       });
       return versReponseApi(await gestionnaire(versRequete(evt)));
     } catch (e) {
-      journal({ niveau: 'erreur', evenement: 'initialisation_ou_traitement_en_echec', erreur: e instanceof Error ? e.name : 'inconnue', message: e instanceof Error ? e.message : undefined });
+      journal({ niveau: 'erreur', evenement: 'initialisation_ou_traitement_en_echec', ...motifErreur(e) });
       return versReponseApi({
         statut: 500,
         entetes: { 'content-type': 'application/problem+json; charset=utf-8', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' },
@@ -235,7 +236,7 @@ const tache = <E, R>(initialiser: () => Promise<(evenement: E) => Promise<R>>) =
       const executer = await prete.catch((e: unknown) => { prete = undefined; throw e; });
       return await executer(evenement);
     } catch (e) {
-      journalConsole({ niveau: 'erreur', evenement: 'tache_en_echec', erreur: e instanceof Error ? e.name : 'inconnue', message: e instanceof Error ? e.message : undefined });
+      journalConsole({ niveau: 'erreur', evenement: 'tache_en_echec', ...motifErreur(e) });
       throw e; // EventBridge réessaie, et l'échec reste visible
     }
   };

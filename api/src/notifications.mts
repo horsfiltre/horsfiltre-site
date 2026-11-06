@@ -6,6 +6,7 @@ import {
 } from '../../shared/src/index.mts';
 import type { DependancesHttp } from './commun.mts';
 import type { Envoi, Envoyeur } from './courriel.mts';
+import { motifErreur } from './motif-erreur.mts';
 
 export type Journal = (evenement: Record<string, unknown>) => void;
 export type ConfigNotifications = {
@@ -31,14 +32,15 @@ export async function contenuAccompagnant(stockage: Stockage, r: Reservation): P
   return { prenom: a.prenom, lienVisio: a.lienVisio };
 }
 
-/** Envoie sans jamais lever : en cas d'échec, une ligne de journal sans adresse ni contenu, et `false`. */
+/** Envoie sans jamais lever : en cas d'échec, une ligne de journal avec le motif, sans adresse ni contenu, et `false`. */
 export async function envoyerSurs(d: Pick<DependancesNotifications, 'envoyer' | 'journal'>, type: string, reservationId: string, preparer: () => Promise<Envoi>): Promise<boolean> {
   try {
     await d.envoyer(await preparer());
     d.journal({ niveau: 'info', evenement: 'courriel_envoye', type, reservationId });
     return true;
   } catch (e) {
-    d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type, reservationId, erreur: e instanceof Error ? e.name : 'inconnue' });
+    // Le motif complet (ressource refusée, statut HTTP) : sans lui, un refus d'accès ne se diagnostique pas depuis le journal.
+    d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type, reservationId, ...motifErreur(e) });
     return false;
   }
 }
@@ -56,7 +58,7 @@ export function creerNotifications(d: DependancesNotifications): Required<Pick<D
 
   return {
     async apresReservation({ reservation: r, jeton, origine }) {
-      const acc = await contenuAccompagnant(d.stockage, r).catch((e) => { d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type: 'confirmation', reservationId: r.id, erreur: (e as Error).name }); return undefined; });
+      const acc = await contenuAccompagnant(d.stockage, r).catch((e) => { d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type: 'confirmation', reservationId: r.id, ...motifErreur(e) }); return undefined; });
       if (!acc) return;
       const liens = { consulter: lienDeGestion(base(origine), jeton), annuler: '', reporter: '' };
       if (!(await injoignable(r, 'confirmation'))) {
@@ -66,7 +68,7 @@ export function creerNotifications(d: DependancesNotifications): Required<Pick<D
     },
 
     async apresReport({ reservation: r, jeton, ancienDebut, origine }) {
-      const acc = await contenuAccompagnant(d.stockage, r).catch((e) => { d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type: 'report', reservationId: r.id, erreur: (e as Error).name }); return undefined; });
+      const acc = await contenuAccompagnant(d.stockage, r).catch((e) => { d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type: 'report', reservationId: r.id, ...motifErreur(e) }); return undefined; });
       if (!acc) return;
       const liens = { consulter: lienDeGestion(base(origine), jeton), annuler: '', reporter: '' };
       if (!(await injoignable(r, 'report'))) {
@@ -77,7 +79,7 @@ export function creerNotifications(d: DependancesNotifications): Required<Pick<D
     },
 
     async apresAnnulation({ reservation: r, message, parAdministrateur }) {
-      const acc = await contenuAccompagnant(d.stockage, r).catch((e) => { d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type: 'annulation', reservationId: r.id, erreur: (e as Error).name }); return undefined; });
+      const acc = await contenuAccompagnant(d.stockage, r).catch((e) => { d.journal({ niveau: 'erreur', evenement: 'courriel_echec', type: 'annulation', reservationId: r.id, ...motifErreur(e) }); return undefined; });
       if (!acc) return;
       if (!(await injoignable(r, 'annulation'))) {
         // METHOD:CANCEL avec le même identifiant : l'événement disparaît de l'agenda de la personne.

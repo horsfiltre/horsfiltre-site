@@ -96,7 +96,22 @@ Le script affiche une adresse : l'ouvrir dans le navigateur, se connecter, puis 
 
 La confirmation, le report et l'annulation partent depuis la fonction de l'API ; les rappels (la veille et une heure avant) depuis une fonction planifiée toutes les 5 minutes ; les rebonds et plaintes sont traités par une troisième fonction, déclenchée par les événements de SES. Tout se règle par la variable `courriel` du module `api` : `null` désactive l'envoi sans toucher à la réservation.
 
-Les droits d'envoi sont limités à l'adresse `contact@horsfiltre.fr`, à l'identité `horsfiltre.fr` et à l'ensemble de configuration `horsfiltre-transactionnel`. Les fonctions n'ont aucun autre accès à SES.
+Les droits d'envoi sont limités à l'action `ses:SendRawEmail`, à l'adresse `contact@horsfiltre.fr`, à l'identité `horsfiltre.fr` et à l'ensemble de configuration `horsfiltre-transactionnel`. Les fonctions n'ont aucun autre accès à SES.
+
+**Pourquoi `ses:SendRawEmail`.** Le code appelle `SendEmail` de l'API v2 avec un contenu brut (`Content.Raw`), nécessaire pour joindre le fichier d'agenda. SES contrôle alors la permission `ses:SendRawEmail`. Une politique qui n'accorde que `ses:SendEmail` fait refuser chaque envoi (`AccessDeniedException ... not authorized to perform 'ses:SendRawEmail'`).
+
+**Vérifier les droits après chaque apply** (lecture seule, aucun e-mail ne part). Simulez **l'action réellement contrôlée**, `ses:SendRawEmail` ; les deux ressources doivent répondre `allowed`, pour chacun des deux rôles :
+
+```powershell
+foreach ($role in "preprod-horsfiltre-api", "preprod-horsfiltre-api-rappels") {
+  aws iam simulate-principal-policy --policy-source-arn "arn:aws:iam::452473973922:role/$role" --action-names ses:SendRawEmail `
+    --resource-arns "arn:aws:ses:eu-west-3:452473973922:identity/horsfiltre.fr" "arn:aws:ses:eu-west-3:452473973922:configuration-set/horsfiltre-transactionnel" `
+    --context-entries "ContextKeyName=ses:FromAddress,ContextKeyValues=contact@horsfiltre.fr,ContextKeyType=string" `
+    --query "EvaluationResults[].ResourceSpecificResults[].[EvalResourceName,EvalResourceDecision]" --output table
+}
+```
+
+Le simulateur ne remplace pas un envoi réel : la preuve finale est la ligne `courriel_envoye` du journal.
 
 **Tester sans envoyer à de vraies personnes.** SES fournit des adresses de simulation, qui ne comptent pas dans votre taux de rebonds :
 
@@ -106,7 +121,7 @@ Les droits d'envoi sont limités à l'adresse `contact@horsfiltre.fr`, à l'iden
 
 **Les rappels** utilisent `site_des_rappels` (dans `main.tf`) pour construire le lien de gestion. En préproduction, c'est l'aperçu de la branche en cours d'essai.
 
-**Si un e-mail ne part pas**, l'alarme `preprod-horsfiltre-api-courriels-en-echec` prévient l'équipe à l'adresse des alertes SES, et la ligne `courriel_echec` du journal de la fonction donne le type de message et le motif, sans aucune adresse.
+**Si un e-mail ne part pas**, l'alarme `preprod-horsfiltre-api-courriels-en-echec` prévient l'équipe à l'adresse des alertes SES, et la ligne `courriel_echec` du journal de la fonction donne le type de message, le nom de l'erreur, le statut HTTP et le message d'AWS (qui nomme l'action, la ressource refusée et, souvent, la raison). Chaque adresse citée y perd sa partie locale (`***@gmail.com`).
 
 ## Retirer cette préproduction
 
