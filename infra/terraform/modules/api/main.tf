@@ -127,6 +127,9 @@ resource "aws_lambda_function" "api" {
 resource "aws_apigatewayv2_api" "api" {
   name          = local.nom
   protocol_type = "HTTP"
+
+  # Une fois le nom de domaine actif, l'adresse fournie par API Gateway est fermée : tout passe par Cloudflare (ADR-0003).
+  disable_execute_api_endpoint = local.domaine_actif
 }
 
 resource "aws_apigatewayv2_integration" "fonction" {
