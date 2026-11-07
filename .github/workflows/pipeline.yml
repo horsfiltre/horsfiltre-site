@@ -64,6 +64,11 @@ jobs:
         # Règles de la réservation (shared/) : créneaux, prix, jetons. Node 22 exécute le TypeScript sans compilation.
         run: npm test
 
+      - name: Construire l'administration (production) et contrôler le résultat
+        # Refuse toute trace de préproduction ou de poste de développement dans ce qui sera publié, et fabrique la politique de
+        # sécurité à partir de admin/config.production.json (admin/README.md).
+        run: node scripts/construire-admin.mjs --environnement production
+
       - name: Valider le HTML
         run: npm run lint:html
 
@@ -124,3 +129,19 @@ jobs:
           url=$(grep -oE "https://[a-zA-Z0-9.-]+\.pages\.dev" deploy.log | tail -1)
           if [ "$GITHUB_EVENT_NAME" = "push" ]; then url="https://horsfiltre.fr"; fi
           echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      # L'administration est un projet Cloudflare Pages distinct, derrière Cloudflare Access (ADR-0005). Elle n'a pas d'aperçu :
+      # seule la production la publie, sous la même approbation que le site public.
+      - name: Construire l'administration (production)
+        if: github.event_name == 'push'
+        run: node scripts/construire-admin.mjs --environnement production
+
+      - name: Publier l'administration sur Cloudflare Pages
+        if: github.event_name == 'push'
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler pages deploy dist/admin \
+            --project-name=horsfiltre-admin \
+            --branch=main
