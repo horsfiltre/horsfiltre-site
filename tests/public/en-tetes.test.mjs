@@ -26,7 +26,7 @@ test('politique de /reserver/* : rien de permissif, et le contrôle anti-robot d
   const p = politique('/reserver/*');
   assert.doesNotMatch(p, /\*|unsafe-|http:\/\/|data:.*script/);
   assert.deepEqual(directive(p, 'frame-src'), ['https://challenges.cloudflare.com']);
-  assert.ok(directive(p, 'script-src').includes('https://challenges.cloudflare.com'));
+  assert.ok(directive(p, 'script-src').some((s) => s === 'https://challenges.cloudflare.com'));
   assert.deepEqual(directive(p, 'default-src'), ["'self'"]);
   assert.deepEqual(directive(p, 'frame-ancestors'), ["'none'"]);
 });
