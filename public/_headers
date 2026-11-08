@@ -27,10 +27,12 @@
   Content-Type: text/plain; charset=utf-8
 
 # Reservation (lot 8) : ces pages remplacent la politique generale (le "!" la detache) pour autoriser,
-# en plus, le controle anti-robot de Cloudflare (script et cadre) et l'API de reservation.
+# en plus, le controle anti-robot de Cloudflare (script et cadre) et les API de reservation : celle de la production
+# (api.horsfiltre.fr) et celle de la preproduction, que parlent les apercus. Un test relit cette ligne : si une adresse
+# manque, le navigateur bloque tous les appels sans qu'aucune erreur n'apparaisse cote serveur.
 /reserver/*
   ! Content-Security-Policy
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; frame-src https://challenges.cloudflare.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://pf1k43c6r3.execute-api.eu-west-3.amazonaws.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://challenges.cloudflare.com https://static.cloudflareinsights.com; frame-src https://challenges.cloudflare.com; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'self' https://api.horsfiltre.fr https://pf1k43c6r3.execute-api.eu-west-3.amazonaws.com https://cloudflareinsights.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests
 
 # Le lien de gestion porte un jeton : il ne doit fuir ni par le referent, ni par un cache.
 /reserver/gerer/*
