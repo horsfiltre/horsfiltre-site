@@ -13,6 +13,9 @@
 @media (min-width:901px){.resa-intro{position:sticky;top:calc(var(--head) + 24px)}}
 @media (max-width:900px){.resa-h,.agenda-mini,.resa-plus{display:none}}
 .resa-form{border:0;box-shadow:var(--lift);border-radius:var(--r-l);padding:clamp(18px,3vw,32px)}
+/* Tant que la liste des créneaux n'est pas chargée, le formulaire garde sa place sans se montrer : s'il n'y a rien à réserver,
+   on ne le voit jamais apparaître puis disparaître. visibility et non display : la place réservée évite tout décalage. */
+.resa-form[data-chargement]{visibility:hidden}
 .etape{border:0;margin:0 0 26px;padding:0;min-width:0}
 .etape legend{display:flex;align-items:center;gap:12px;font-family:var(--display);font-weight:800;font-size:22px;letter-spacing:-.02em;margin:0 0 14px;padding:0}
 .etape .n{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;background:var(--ink);color:var(--white);font-size:16px}

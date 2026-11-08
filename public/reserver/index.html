@@ -17,7 +17,6 @@
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="manifest" href="/site.webmanifest">
 <meta name="hf-whatsapp" content="">
 <link rel="preload" href="/fonts/bricolage.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/geist.woff2" as="font" type="font/woff2" crossorigin>
@@ -65,7 +64,7 @@
       <p class="small muted resa-aide">Une question avant de réserver ? <a href="/questions/#whatsapp">Écrivez-nous sur WhatsApp</a> ou à <a href="mailto:contact@horsfiltre.fr">contact@horsfiltre.fr</a>.</p>
     </div>
 
-    <form class="card resa-form" id="resa" novalidate>
+    <form class="card resa-form" id="resa" data-chargement novalidate>
       <div class="err-summary" tabindex="-1" hidden><h2>Il manque quelques informations</h2><ul></ul></div>
       <div data-agenda>
         <fieldset class="etape">
