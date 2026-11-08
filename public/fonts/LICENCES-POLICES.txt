@@ -11,6 +11,10 @@ Instrument Sans
   Fichier : instrument-sans.woff2, version variable (graisses 400 à 600),
   réduite aux caractères latins utilisés par le site.
 
+Geist
+  Copyright 2024 The Geist Project Authors (https://github.com/vercel/geist-font)
+  Fichier : geist.woff2, graisses 400 à 600, réduit aux caractères latins utilisés par le site.
+
 Ces polices ne déclarent aucun nom réservé. Les fichiers ci-dessus sont des versions modifiées
 (réduction du jeu de caractères et de la plage de variation) : elles sont fournies telles quelles,
 sans garantie, et ne peuvent pas être vendues seules.

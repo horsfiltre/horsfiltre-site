@@ -33,15 +33,17 @@ const sel = creerSelecteur($('[data-agenda]'), {
     cleCourante = null;
   },
 });
+// Le formulaire se montre une fois la liste chargée (ou en erreur, pour que l'erreur et « Réessayer » soient visibles).
+const reveler = () => form.removeAttribute('data-chargement');
 if (FERME) {
   // Pas d'API pour cette adresse : la réservation n'est pas ouverte ici. On le dit, sans rien simuler.
-  form.hidden = true; $('[data-ferme]').hidden = false;
+  form.hidden = true; $('[data-ferme]').hidden = false; reveler();
 } else {
-  sel.charger().then(() => { if (q.get('creneau') && sel.choisi) $('#prenom').focus({ preventScroll: false }); }).catch(() => { $('[data-erreur-agenda]').hidden = false; });
+  sel.charger().then(() => { reveler(); if (q.get('creneau') && sel.choisi) $('#prenom').focus({ preventScroll: false }); }).catch(() => { reveler(); $('[data-erreur-agenda]').hidden = false; });
 }
 // Plus aucun créneau : on le dit, avec un moyen de nous joindre (la liste d'attente viendra après l'ouverture).
 $('[data-agenda]').addEventListener('agenda:vide', () => { $('[data-complet]').hidden = false; form.hidden = true; });
-$('[data-recharger]')?.addEventListener('click', () => { $('[data-erreur-agenda]').hidden = true; sel.charger().catch(() => { $('[data-erreur-agenda]').hidden = false; }); });
+$('[data-recharger]')?.addEventListener('click', () => { $('[data-erreur-agenda]').hidden = true; sel.charger().then(reveler).catch(() => { $('[data-erreur-agenda]').hidden = false; }); });
 
 /* ---------- 3 : les coordonnées ---------- */
 const champs = { prenom: $('#prenom'), email: $('#email'), whatsapp: $('#whatsapp'), motivation: $('#motivation') };
