@@ -1,14 +1,29 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { choisirConfiguration, PREPROD } from '../../public/assets/js/config.js';
+import { choisirConfiguration, PREPROD, PRODUCTION } from '../../public/assets/js/config.js';
 import { dateParisIso } from '../../public/assets/js/temps.js';
 
-test('configuration : horsfiltre.fr est fermé tant que la production n’existe pas, jamais en démonstration', () => {
-  for (const hote of ['horsfiltre.fr', 'www.horsfiltre.fr', 'HORSFILTRE.FR', 'horsfiltre.pages.dev']) {
-    const c = choisirConfiguration(hote, '?demo=1&api=http://localhost:9102');
-    assert.equal(c.mode, 'ferme', hote);
-    assert.equal(c.api, '', hote);
+test('configuration : horsfiltre.fr parle à la production, et rien dans l’adresse de la page ne peut en changer', () => {
+  for (const hote of ['horsfiltre.fr', 'www.horsfiltre.fr', 'HORSFILTRE.FR', 'Www.HorsFiltre.fr']) {
+    // Ni la démonstration, ni une API locale, ni une autre clé de site ne passent par la barre d'adresse.
+    const c = choisirConfiguration(hote, '?demo=1&api=http://localhost:9102&turnstile=autre');
+    assert.deepEqual(c, { mode: 'reel', api: PRODUCTION.api, turnstile: PRODUCTION.turnstile }, hote);
   }
+});
+
+test('configuration : l’adresse technique horsfiltre.pages.dev reste fermée (le widget de production et le CORS de l’API ne l’acceptent pas)', () => {
+  for (const recherche of ['', '?demo=1&api=http://localhost:9102']) {
+    assert.deepEqual(choisirConfiguration('horsfiltre.pages.dev', recherche), { mode: 'ferme', api: '', turnstile: '' }, recherche);
+  }
+});
+
+test('configuration : la production est bien celle de horsfiltre.fr, et ne reprend rien de la préproduction ni du poste de développement', () => {
+  assert.equal(PRODUCTION.api, 'https://api.horsfiltre.fr');
+  assert.match(PRODUCTION.turnstile, /^0x[A-Za-z0-9_-]{20,}$/);
+  assert.notEqual(PRODUCTION.turnstile, PREPROD.turnstile); // une clé de préproduction ne ferait jamais valider le widget de production
+  assert.notEqual(PRODUCTION.api, PREPROD.api);
+  assert.doesNotMatch(JSON.stringify(PRODUCTION), /localhost|127\.0\.0\.1|execute-api|preprod/);
+  assert.ok(Object.isFrozen(PRODUCTION));
 });
 
 test('configuration : un aperçu de Cloudflare Pages parle à la préproduction', () => {
