@@ -17,10 +17,10 @@
     "admin:dev": "wrangler pages dev admin --port 8788"
   },
   "devDependencies": {
-    "@aws-sdk/client-dynamodb": "3.1153.0",
-    "@aws-sdk/client-sesv2": "3.1153.0",
-    "@aws-sdk/client-ssm": "3.1153.0",
-    "@aws-sdk/lib-dynamodb": "3.1153.0",
+    "@aws-sdk/client-dynamodb": "3.1156.0",
+    "@aws-sdk/client-sesv2": "3.1156.0",
+    "@aws-sdk/client-ssm": "3.1156.0",
+    "@aws-sdk/lib-dynamodb": "3.1156.0",
     "chrome-launcher": "1.2.2",
     "esbuild": "0.28.2",
     "html-validate": "11.17.0",
