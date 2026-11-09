@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { PREPROD, PRODUCTION } from '../../public/assets/js/config.js';
 
 // Le bloc d'un chemin dans public/_headers, tel que Cloudflare Pages le lit : le motif, puis ses lignes indentées.
@@ -41,4 +41,23 @@ test('les pages à jeton ne sont jamais mises en cache ni transmises par le réf
   assert.ok(bloc('/reserver/gerer/*').includes('Referrer-Policy: no-referrer'));
   assert.ok(bloc('/reserver/gerer/*').includes('Cache-Control: no-store'));
   assert.ok(bloc('/reserver/confirmation/*').includes('Cache-Control: no-store'));
+});
+
+// Pas d'indexation des pages de réservation jusqu'à l'ouverture publique. À RETIRER AU LANCEMENT : ce bloc de tests, la ligne
+// X-Robots-Tag de /reserver/* et la balise robots de public/reserver/index.html.
+const PAGES_RESERVATION = ['public/reserver/index.html', 'public/reserver/confirmation/index.html', 'public/reserver/gerer/index.html'];
+
+test('référencement : les trois pages de réservation portent la balise noindex, et l’en-tête de /reserver/* la double', () => {
+  for (const page of PAGES_RESERVATION) assert.match(readFileSync(page, 'utf8'), /<meta name="robots" content="[^"]*\bnoindex\b[^"]*">/, `${page} doit porter noindex`);
+  assert.ok(bloc('/reserver/*').some((l) => /^X-Robots-Tag:\s*noindex\b/.test(l)), 'X-Robots-Tag: noindex dans le bloc /reserver/*');
+});
+
+test('référencement : la page d’accueil et le reste du site restent indexables (jamais de noindex par défaut)', () => {
+  assert.doesNotMatch(readFileSync('public/index.html', 'utf8'), /<meta name="robots"[^>]*noindex/i);
+  assert.ok(!bloc('/*').some((l) => /^X-Robots-Tag:/i.test(l)), 'le bloc général /* ne doit pas désindexer le site entier');
+});
+
+test('référencement : aucun robots.txt n’interdit /reserver/ (un moteur qui ne peut pas lire la page ne voit pas son noindex)', () => {
+  if (!existsSync('public/robots.txt')) return;
+  assert.doesNotMatch(readFileSync('public/robots.txt', 'utf8'), /Disallow:\s*\/reserver/i);
 });
