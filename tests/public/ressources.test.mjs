@@ -33,7 +33,6 @@ const estRessource = (u) => EXTENSIONS_RESSOURCE.test(u) && !u.endsWith('.html')
 const PAGES_A_ECRIRE = [
   '/methode/', '/histoires/', '/tarifs/', '/parents/', '/equipe/', '/questions/', '/test/', '/chiffres/', '/ressources/', '/verifier/',
   '/coulisses/', '/plan-du-site/', '/accessibilite/', '/cookies/', '/cgv/', '/confidentialite/', '/mentions-legales/',
-  '/cgv.html', '/confidentialite.html', '/mentions-legales.html',
 ];
 
 test('ressources : chaque police, icône, feuille de style et script demandé par une page existe dans le dépôt', () => {
@@ -66,4 +65,11 @@ test('ressources : une police déclarée dans une feuille de style est aussi pr�
   const licence = readFileSync('public/fonts/LICENCES-POLICES.txt', 'utf8');
   const nomsDeFichiers = tous.filter((f) => f.startsWith('public/fonts/') && f.endsWith('.woff2')).map((f) => f.split('/').pop());
   for (const nom of nomsDeFichiers) assert.ok(licence.includes(`Fichier : ${nom}`), `${nom} est publiée sans entrée dans LICENCES-POLICES.txt`);
+});
+
+test('ressources : les icônes que déclare le manifeste existent', () => {
+  const manifeste = JSON.parse(readFileSync('public/site.webmanifest', 'utf8'));
+  const absentes = manifeste.icons.map((i) => i.src).filter((u) => !existants.has(u));
+  assert.deepEqual(absentes, []);
+  assert.ok(existants.has(manifeste.start_url ?? '/') || (manifeste.start_url ?? '/') === '/');
 });
