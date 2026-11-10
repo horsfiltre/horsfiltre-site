@@ -165,7 +165,7 @@ async function envoyer(tentative = 0) {
       }
       dire('', 'wip', frag);
     } else if (e.status === 409) {
-      dire('Vous avez déjà un échange prévu. Pour le changer, utilisez le lien de votre e-mail de confirmation.', 'wip');
+      dire('', 'wip', avecContact('Vous avez déjà un échange prévu. Pour le changer, utilisez le lien de votre e-mail de confirmation. Vous réservez pour une autre personne avec la même adresse ? Écrivez-nous : '));
     } else if (e.status === 422) {
       const refus = decrireRefus422(e);
       if (refus.type === 'champs') montrerErreurs(Object.entries(e.erreurs).map(([k, v]) => [k, MESSAGES[k] || String(v)]));
@@ -180,7 +180,7 @@ async function envoyer(tentative = 0) {
       await new Promise((ok) => setTimeout(ok, Math.min(8, e.retryAfter || 3) * 1000));
       return envoyer(1); // même clé d'idempotence : jamais de double réservation
     } else {
-      dire('', 'ko', avecContact('La connexion a échoué, rien n’a été réservé. Réessayez, ou écrivez-nous : '));
+      dire('', 'ko', avecContact('La connexion s’est interrompue. Votre réservation est peut-être enregistrée : regardez vos e-mails avant de réessayer. Réessayer avec la même adresse ne crée jamais de doublon. En cas de doute, écrivez-nous : '));
     }
   }
 }
