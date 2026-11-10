@@ -99,11 +99,14 @@ function valider() {
   return e;
 }
 const cible = (champ) => ({ creneau: $('[data-agenda] input:not(:disabled)'), recherche: $('input[name="recherche"]', form), canal: $('input[name="canal"]', form) }[champ] || champs[champ]);
-function montrerErreurs(liste) {
+// Le titre dit la cause : une adresse refusée n'est pas une information manquante.
+const TITRE_ERREURS = 'Il manque quelques informations', TITRE_ADRESSE = 'Vérifiez votre adresse e-mail';
+function montrerErreurs(liste, titre = TITRE_ERREURS) {
   for (const [champ, texte] of liste) {
     const el = $(`#err-${champ}`); if (el) el.textContent = texte;
     const c = champs[champ]; if (c) c.setAttribute('aria-invalid', 'true');
   }
+  $('h2', resume).textContent = titre;
   const ul = $('ul', resume); ul.textContent = '';
   for (const [champ, texte] of liste) {
     const li = d.createElement('li'), a = d.createElement('a');
@@ -170,7 +173,7 @@ async function envoyer(tentative = 0) {
       const refus = decrireRefus422(e);
       if (refus.type === 'champs') montrerErreurs(Object.entries(e.erreurs).map(([k, v]) => [k, MESSAGES[k] || String(v)]));
       // Un message envoyé à cette adresse a rebondi : on le dit près du champ, jamais sous l'étiquette du contrôle anti-robot.
-      else if (refus.type === 'adresse_injoignable') montrerErreurs([['email', 'Nous n’arrivons pas à joindre cette adresse e-mail. Essayez-en une autre, ou écrivez-nous à contact@horsfiltre.fr.']]);
+      else if (refus.type === 'adresse_injoignable') montrerErreurs([['email', 'Nous n’arrivons pas à joindre cette adresse e-mail. Essayez-en une autre, ou écrivez-nous à contact@horsfiltre.fr.']], TITRE_ADRESSE);
       else if (refus.type === 'robot') dire('La vérification anti-robot a échoué. Réessayez : elle se relance toute seule.', 'wip');
       else dire('', 'ko', avecContact('Rien n’a été réservé. Réessayez, ou écrivez-nous : '));
     } else if (e.status === 429) {

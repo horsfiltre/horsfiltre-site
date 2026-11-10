@@ -19,7 +19,7 @@ else {
   // Une adresse fausse : la personne n'a ni le lien d'annulation ni le lien de visio. Son message à l'équipe porte l'identifiant de sa réservation.
   const correction = $('[data-mauvaise-adresse]');
   if (correction) correction.href = 'mailto:contact@horsfiltre.fr?subject=' + encodeURIComponent('Adresse e-mail incorrecte pour ma réservation')
-    + '&body=' + encodeURIComponent(`Bonjour,\n\nl’adresse e-mail de ma réservation est incorrecte.\n\nRéservation : ${r.id}\nÉchange : ${$('[data-quand]').textContent}\nMa bonne adresse : \n`);
+    + '&body=' + encodeURIComponent(`Bonjour,\n\nl’adresse e-mail de ma réservation est incorrecte.\n\nRéservation : ${r.id}\nPrénom : ${r.prenomCandidat || ''}\nÉchange : ${$('[data-quand]').textContent}\nAvec : ${r.accompagnant?.prenom || ''}\nMa bonne adresse : \n`);
   const titre = `Échange Hors Filtre avec ${qui}`;
   const description = r.canal === 'whatsapp' ? `${qui} vous appellera sur WhatsApp. Pour annuler ou reporter : le lien de votre e-mail de confirmation.` : `Le lien Google Meet est dans votre e-mail de confirmation. Pour annuler ou reporter : le lien du même e-mail.`;
   const ics = $('[data-ics]');
