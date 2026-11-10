@@ -32,7 +32,7 @@ const estRessource = (u) => EXTENSIONS_RESSOURCE.test(u) && !u.endsWith('.html')
 // lien vers une page absente ne l'est pas. Quand une page est créée, son adresse doit être retirée d'ici (le test l'exige).
 const PAGES_A_ECRIRE = [
   '/methode/', '/histoires/', '/tarifs/', '/parents/', '/equipe/', '/questions/', '/test/', '/chiffres/', '/ressources/', '/verifier/',
-  '/coulisses/', '/plan-du-site/', '/accessibilite/', '/cookies/', '/cgv/', '/confidentialite/', '/mentions-legales/',
+  '/coulisses/', '/plan-du-site/', '/accessibilite/', '/cookies/',
   '/cgv.html', '/confidentialite.html', '/mentions-legales.html',
 ];
 
