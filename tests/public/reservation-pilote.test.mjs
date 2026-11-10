@@ -76,6 +76,9 @@ test('confirmation : le lien de correction porte l’identifiant de la réservat
   assert.match(CONFIRMATION_JS, /mailto:contact@horsfiltre\.fr\?subject=/);
   assert.match(CONFIRMATION_JS, /Réservation : \$\{r\.id\}/);
   assert.match(CONFIRMATION_JS, /Ma bonne adresse/);
+  // Avec plusieurs accompagnants, deux réservations peuvent tomber à la même heure : le prénom et l'accompagnant les départagent.
+  assert.match(CONFIRMATION_JS, /Prénom : \$\{r\.prenomCandidat/);
+  assert.match(CONFIRMATION_JS, /Avec : \$\{r\.accompagnant\?\.prenom/);
 });
 
 test('confirmation : la liste de préparation ne renvoie plus vers une page qui n’existe pas, et le partage mène à l’accueil', () => {
@@ -147,4 +150,28 @@ test('procédure d’équipe : l’adresse incorrecte a sa conduite à tenir, fi
   assert.doesNotMatch(doc, /[\w.+-]+@(?!horsfiltre\.fr)[\w-]+\.[a-z]{2,}/i, 'aucune adresse de personne');
   // la page promet ce que la procédure tient : écrire avec la bonne adresse, recevoir les informations
   assert.match(CONFIRMATION, /avec la bonne adresse[\s\S]*nous vous renvoyons les informations de votre échange/i);
+});
+
+test('réservation : l’encadré d’erreurs dit la cause, et le titre par défaut revient pour les autres erreurs', () => {
+  assert.match(RESERVER_JS, /TITRE_ERREURS = 'Il manque quelques informations'/);
+  assert.match(RESERVER_JS, /TITRE_ADRESSE = 'Vérifiez votre adresse e-mail'/);
+  assert.match(RESERVER_JS, /function montrerErreurs\(liste, titre = TITRE_ERREURS\)/);
+  assert.match(RESERVER_JS, /\$\('h2', resume\)\.textContent = titre;/);
+  // seul le refus pour adresse injoignable passe le titre propre à l'adresse
+  const emploisAdresse = RESERVER_JS.match(/, TITRE_ADRESSE\)/g) ?? [];
+  assert.equal(emploisAdresse.length, 1);
+  assert.match(RESERVER_JS, /refus\.type === 'adresse_injoignable'\) montrerErreurs\(\[\['email', [^\]]*\]\], TITRE_ADRESSE\)/);
+  // le titre en dur de la page est celui par défaut
+  assert.match(lire('public/reserver/index.html'), /<h2>Il manque quelques informations<\/h2>/);
+});
+
+test('procédure d’équipe : on retrouve la fiche avec ce que le message contient, pas avec un identifiant que l’administration n’affiche pas', () => {
+  const doc = lire('docs/operations/adresse-incorrecte.md');
+  const etape1 = doc.split('## Conduite à tenir')[1]?.split('\n2.')[0] ?? '';
+  assert.match(etape1, /jour et l'heure/);
+  assert.match(etape1, /prénom/i);
+  assert.match(etape1, /accompagnant/i);
+  assert.match(etape1, /statut/i);
+  assert.match(etape1, /n'est pas affiché par l'administration/);
+  assert.doesNotMatch(etape1, /avec l'identifiant écrit dans le message/);
 });

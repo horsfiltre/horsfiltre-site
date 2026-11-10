@@ -10,7 +10,7 @@ Pour la réservation, l'e-mail est le seul canal : une adresse fausse prive la p
 
 ## Conduite à tenir
 
-1. **Retrouver la réservation** dans l'onglet Réservations de l'administration, avec l'identifiant écrit dans le message de la personne.
+1. **Retrouver la réservation** dans l'onglet Réservations de l'administration, avec ce que le message contient : le **jour et l'heure** de l'échange, le **prénom** et l'**accompagnant**. Deux fiches au même créneau se distinguent par leur **statut** (Confirmée ou Annulée) et par le prénom. L'identifiant de réservation écrit dans le message n'est pas affiché par l'administration : il ne sert qu'à le vérifier avec un développeur.
 2. **Ne rien annuler**, sauf le cas particulier ci-dessous. Répondre à la **bonne adresse** : jour et heure de l'échange (heure de Paris), avec quel accompagnant, et le lien de visio de cet accompagnant (onglet Équipe), ou la mention que l'accompagnant appellera sur WhatsApp si c'est le canal choisi.
 3. **Laisser la mauvaise adresse telle quelle** : les messages suivants (rappels) lui seront envoyés. Si elle rebondit, la plateforme la marque toute seule comme injoignable. Ce repère n'apparaît pas encore dans l'administration.
 
