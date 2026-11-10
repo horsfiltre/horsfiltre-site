@@ -94,7 +94,7 @@
       es.forEach(function (e) { if (e.isIntersecting) visibles.add(e.target); else visibles.delete(e.target); });
       fab.classList.toggle('is-away', visibles.size > 0);
     }, { rootMargin: '-70% 0px 0px 0px' });
-    d.querySelectorAll('.btn-primary, .btn-secondary, .sticky-bar, .foot').forEach(function (b) { io.observe(b); });
+    d.querySelectorAll('.btn-primary, .btn-secondary, .btn-ink, .sticky-bar, .foot, [data-mauvaise-adresse]').forEach(function (b) { io.observe(b); });
   }
 
   /* ---------- Apparitions à l'arrivée sur une section ---------- */

@@ -16,6 +16,10 @@ else {
     ? `Sur WhatsApp : ${qui} vous appellera au numéro que vous avez indiqué.`
     : `En visio : le lien Google Meet de ${qui} est dans votre e-mail de confirmation.`;
   $('[data-email]').textContent = r.email || 'votre adresse';
+  // Une adresse fausse : la personne n'a ni le lien d'annulation ni le lien de visio. Son message à l'équipe porte l'identifiant de sa réservation.
+  const correction = $('[data-mauvaise-adresse]');
+  if (correction) correction.href = 'mailto:contact@horsfiltre.fr?subject=' + encodeURIComponent('Adresse e-mail incorrecte pour ma réservation')
+    + '&body=' + encodeURIComponent(`Bonjour,\n\nl’adresse e-mail de ma réservation est incorrecte.\n\nRéservation : ${r.id}\nÉchange : ${$('[data-quand]').textContent}\nMa bonne adresse : \n`);
   const titre = `Échange Hors Filtre avec ${qui}`;
   const description = r.canal === 'whatsapp' ? `${qui} vous appellera sur WhatsApp. Pour annuler ou reporter : le lien de votre e-mail de confirmation.` : `Le lien Google Meet est dans votre e-mail de confirmation. Pour annuler ou reporter : le lien du même e-mail.`;
   const ics = $('[data-ics]');
@@ -30,7 +34,7 @@ else {
 }
 $('[data-partager]')?.addEventListener('click', async () => {
   const texte = 'J’ai réservé un échange gratuit avec Hors Filtre pour ma recherche. Si tu veux voir qui ils sont :';
-  const url = 'https://horsfiltre.fr/parents/';
+  const url = 'https://horsfiltre.fr/';
   try { if (navigator.share) { await navigator.share({ title: 'Hors Filtre', text: texte, url }); return; } } catch { return; }
   location.href = `https://wa.me/?text=${encodeURIComponent(texte + ' ' + url)}`;
 });
