@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 // Les pages de réservation sont ouvertes au public depuis le lot 10c : rien de ce qu'on y lit ne doit être un marqueur à remplir,
@@ -174,4 +174,31 @@ test('procédure d’équipe : on retrouve la fiche avec ce que le message conti
   assert.match(etape1, /statut/i);
   assert.match(etape1, /n'est pas affiché par l'administration/);
   assert.doesNotMatch(etape1, /avec l'identifiant écrit dans le message/);
+});
+
+// ---------------------------------------------------------------------------------------------------------------------------------
+// Lot 15 : tant qu'une page légale n'existe pas, aucune page de réservation n'y renvoie (Cloudflare Pages répondrait par l'accueil).
+test('réservation : aucun lien vers une page légale qui n’existe pas encore (la règle se desserre quand la page existe)', () => {
+  const LEGALES = [['/confidentialite/', 'public/confidentialite/index.html'], ['/mentions-legales/', 'public/mentions-legales/index.html'], ['/cgv/', 'public/cgv/index.html']];
+  let controlees = 0;
+  for (const [adresse, fichier] of LEGALES) {
+    if (existsSync(fichier)) continue;
+    controlees += 1;
+    for (const page of PAGES) assert.doesNotMatch(lire(page), new RegExp(`href="${adresse}"`), `${page} renvoie vers ${adresse}, qui n’existe pas`);
+  }
+  assert.ok(controlees + LEGALES.filter(([, f]) => existsSync(f)).length === LEGALES.length);
+});
+
+test('réservation : la mention sous le formulaire dit à quoi servent les données, sans en promettre moins ni plus que le code', () => {
+  const mention = lire('public/reserver/index.html').match(/<p class="small muted">Vos informations servent[^]*?<\/p>/)?.[0] ?? '';
+  assert.ok(mention.length > 0, 'la mention existe');
+  // les trois usages réels : organiser l'échange (réservation, e-mails), anti-robot (Turnstile), adresse injoignable (marque après rebond)
+  assert.match(mention, /organiser cet échange/);
+  assert.match(mention, /protéger le formulaire contre les robots/);
+  assert.match(mention, /ne plus écrire à une adresse qui ne fonctionne pas/);
+  // l'ancienne formule « uniquement » était fausse dès que l'anti-robot et la marque d'adresse existent
+  assert.doesNotMatch(mention, /uniquement/);
+  // une question sur les données mène à une adresse qui répond : un lien e-mail, pas une page absente
+  assert.match(mention, /<a href="mailto:contact@horsfiltre\.fr">contact@horsfiltre\.fr<\/a>/);
+  assert.doesNotMatch(mention, /href="\//);
 });
